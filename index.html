@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1B2A">
+<title>سجل الميناء — بيانات الباخرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hull:#0E1B2A; --steel:#1B2E42; --steel-line:#2C4257; --marigold:#F4A81D;
+  --paper:#F2EDE3; --paper-deep:#E4DCCC; --sea:#2F9E7E; --alert:#C63B3B;
+  --ink:#12212F; --ink-soft:#5C6C7A; --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;background:var(--hull);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+.mono{font-family:"IBM Plex Mono","Courier New",monospace;font-variant-numeric:tabular-nums}
+.ltr{direction:ltr;unicode-bidi:isolate;text-align:right}
+.screen{display:none;min-height:100dvh}
+.screen.active{display:block}
+
+/* ===== الدخول ===== */
+#login{display:none;place-items:center;padding:24px 18px;
+  background:radial-gradient(130% 80% at 75% -15%,#1C3652 0,transparent 62%),
+  repeating-linear-gradient(115deg,transparent 0 40px,rgba(255,255,255,.02) 40px 41px),var(--hull)}
+#login.active{display:grid}
+.login-card{width:100%;max-width:400px}
+.ship-art{margin:0 auto 26px;max-width:360px}
+.ship-art svg{display:block;width:100%;height:auto}
+.brand{text-align:center;margin-bottom:26px}
+.brand h1{font-family:"Reem Kufi",sans-serif;font-size:26px;color:#fff;font-weight:600;letter-spacing:.5px}
+.brand span{display:block;margin-top:5px;font-size:13px;color:#7D93A8}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:500;margin-bottom:7px;color:#9DB2C4}
+.field input{width:100%;padding:14px 15px;border-radius:10px;border:1px solid var(--steel-line);
+  background:rgba(255,255,255,.05);color:#fff;outline:none;transition:.18s}
+.field input:focus-visible{border-color:var(--marigold);background:rgba(244,168,29,.08);box-shadow:0 0 0 3px rgba(244,168,29,.16)}
+.btn{width:100%;padding:15px;border:none;border-radius:10px;cursor:pointer;background:var(--marigold);
+  color:#22160A;font-weight:700;font-size:15.5px;transition:transform .12s,filter .18s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.err{display:none;margin-bottom:14px;padding:11px 14px;border-radius:9px;font-size:13.5px;
+  background:rgba(198,59,59,.14);border:1px solid rgba(198,59,59,.45);color:#FF9F9F}
+.err.show{display:block}
+.pw-row{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;color:#8AA0B4;cursor:pointer}
+.pw-row input{width:auto;accent-color:var(--marigold)}
+
+/* ===== الواجهة ===== */
+#app{background:var(--paper);padding-bottom:46px}
+.topbar{background:var(--hull);padding:14px 16px 16px;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--marigold)}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar h1{font-family:"Reem Kufi",sans-serif;color:#fff;font-size:19px;font-weight:600}
+.topbar .sub{color:#8AA0B4;font-size:11.5px;margin-top:3px}
+.logout{background:transparent;border:1px solid var(--steel-line);color:#9DB2C4;padding:8px 12px;border-radius:8px;font-size:12.5px;cursor:pointer}
+.logout:hover{border-color:var(--marigold);color:var(--marigold)}
+.wrap{max-width:600px;margin:0 auto;padding:0 14px}
+
+.block{background:#fff;border:1px solid var(--paper-deep);border-radius:var(--r);margin-top:16px;overflow:hidden}
+.block-head{display:flex;align-items:center;gap:10px;padding:13px 15px;background:#FBF9F5;border-bottom:1px solid var(--paper-deep)}
+.block-head .n{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex:none;
+  background:var(--hull);color:#fff;font-size:12px;font-weight:700;font-family:"IBM Plex Mono",monospace}
+.block-head h2{font-family:"Reem Kufi",sans-serif;font-size:15.5px;font-weight:600;flex:1}
+.pin{font-size:10.5px;font-weight:600;color:var(--ink-soft);background:#EFEAE0;padding:3px 8px;border-radius:20px}
+.pin.live{background:#FFF3D9;color:#8A6206}
+.block-body{padding:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{margin-bottom:13px}
+.f:last-child{margin-bottom:0}
+.f label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.f input{width:100%;padding:12px 13px;border:1.5px solid #DDD5C6;border-radius:10px;background:#FBF9F5;outline:none;transition:.16s}
+.f input:focus-visible{border-color:var(--hull);background:#fff;box-shadow:0 0 0 3px rgba(14,27,42,.09)}
+.f input.bad{border-color:var(--alert);background:#FDF3F3}
+.f .msg{display:none;margin-top:5px;font-size:11.5px;color:var(--alert);font-weight:500}
+.f.bad .msg{display:block}
+.unit{position:relative}
+.unit input{padding-left:48px}
+.unit i{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--ink-soft);font-weight:600}
+.shift{display:flex;gap:8px}
+.shift label{flex:1;margin:0;cursor:pointer;position:relative}
+.shift input{position:absolute;opacity:0;pointer-events:none}
+.shift .opt{display:block;text-align:center;padding:12px 6px;border:1.5px solid #DDD5C6;border-radius:10px;
+  background:#FBF9F5;font-size:13.5px;font-weight:600;color:var(--ink-soft);transition:.15s}
+.shift input:checked+.opt{background:var(--hull);border-color:var(--hull);color:#fff}
+.shift input:focus-visible+.opt{box-shadow:0 0 0 3px rgba(244,168,29,.55)}
+.now{background:none;border:none;color:var(--sea);font-size:11.5px;font-weight:600;cursor:pointer;padding:0;float:left}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 15px 0;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:8px 13px;border-radius:20px;border:1.5px solid var(--paper-deep);background:#fff;
+  font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--hull);border-color:var(--hull);color:#fff}
+.tab.add{border-style:dashed;color:var(--sea);border-color:#B9DCCF}
+.actions{display:flex;gap:9px;margin-top:14px}
+.btn-dark{flex:1;padding:15px;border:none;border-radius:10px;background:var(--hull);color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.btn-dark:hover{background:var(--steel)}
+.btn-dark:active{transform:translateY(1px)}
+.btn-dark:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+.btn-ghost{padding:15px 16px;border:1.5px solid #DDD5C6;background:#fff;border-radius:10px;color:var(--ink-soft);font-weight:600;font-size:13.5px;cursor:pointer}
+
+.totals{display:flex;gap:9px;margin-top:16px}
+.stat{flex:1;background:var(--hull);border-radius:12px;padding:12px 13px;color:#fff}
+.stat b{display:block;font-size:20px;font-weight:600}
+.stat small{color:#8AA0B4;font-size:11px}
+.stat.gold{background:var(--marigold);color:#22160A}
+.stat.gold small{color:#6B4E12}
+.grand{margin-top:9px;background:#fff;border:1.5px dashed var(--marigold);border-radius:12px;
+  padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grand span{font-size:13px;font-weight:600;color:var(--ink-soft)}
+.grand b{font-size:20px;font-weight:600}
+.grand b i{font-style:normal;font-size:12px;color:var(--ink-soft);margin-inline-start:4px}
+
+.slip{position:relative;background:#fff;margin-bottom:11px;padding:15px;border:1px solid var(--paper-deep);border-radius:6px}
+.slip::before{content:"";position:absolute;top:-1px;right:0;left:0;height:6px;
+  background:radial-gradient(circle at 5px 0,transparent 0 4px,#fff 4px);background-size:10px 8px;background-repeat:repeat-x}
+.slip-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:11px}
+.serial{font-size:10.5px;color:var(--ink-soft);letter-spacing:1px;font-weight:600}
+.plate{display:inline-block;margin-top:5px;padding:5px 11px;border:2px solid var(--ink);border-radius:5px;font-size:16px;font-weight:600;letter-spacing:1px}
+.stamp{border:2px solid var(--marigold);color:#9A6907;border-radius:5px;padding:6px 10px;text-align:center;transform:rotate(-3deg);background:#FFF9EC;flex:none}
+.stamp b{display:block;font-size:16px;font-weight:600}
+.stamp small{font-size:9px;letter-spacing:1px;color:#B08326}
+.slip-rows{border-top:1px dashed #D9D0BF;padding-top:10px;display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.row span{color:var(--ink-soft)}
+.row b{font-weight:500}
+.del{margin-top:10px;background:none;border:none;color:var(--alert);font-size:12px;font-weight:600;cursor:pointer;padding:3px 0}
+.empty{border:1.5px dashed #D3C9B6;border-radius:var(--r);padding:30px 20px;text-align:center}
+.empty b{display:block;font-family:"Reem Kufi",sans-serif;font-size:15.5px;margin-bottom:5px}
+.empty p{font-size:13px;color:var(--ink-soft);line-height:1.8}
+.exports{display:flex;gap:9px;margin-top:16px}
+.export{flex:1;padding:15px 8px;border:none;border-radius:10px;cursor:pointer;background:var(--sea);color:#fff;font-weight:600;font-size:14.5px}
+.export.alt{background:var(--hull)}
+.export:disabled{background:#C9C1B2;cursor:not-allowed}
+.sheet-del{margin-right:auto;background:none;border:1px solid #E3C9C9;color:var(--alert);
+  font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px;cursor:pointer;font-family:inherit}
+.pin.edit-badge{background:#FFF3D9;color:#8A6206}
+.slip.editing{border-color:var(--marigold);box-shadow:0 0 0 2px #F9E0AC}
+.slip-acts{margin-top:10px;display:flex;gap:14px;align-items:center}
+.edt{background:none;border:none;color:var(--hull);font-size:12px;font-weight:700;cursor:pointer;padding:3px 0;font-family:inherit}
+.btn-danger{background:var(--alert);color:#fff;border:none;border-radius:8px;padding:12px 18px;
+  font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(14,27,42,.55);display:none;align-items:center;
+  justify-content:center;padding:24px;z-index:60}
+.modal.on{display:flex}
+.modal-card{background:#fff;border-radius:14px;padding:22px;max-width:340px;width:100%;
+  box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.modal-card h3{font-family:"Reem Kufi",sans-serif;font-size:18px;color:var(--hull);margin-bottom:8px}
+.modal-card p{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin-bottom:18px}
+.modal-acts{display:flex;gap:10px}
+.modal-acts button{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:-6px 0 16px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#EFEADE;border:1px solid #DFD6C4;
+  border-radius:20px;padding:5px 6px 5px 5px;font-size:12.5px;font-weight:600;color:var(--hull)}
+.chip .u{background:none;border:none;font:inherit;color:inherit;cursor:pointer;padding:1px 4px}
+.chip .x{background:#DCD2BE;border:none;color:#6B6152;width:18px;height:18px;border-radius:50%;
+  font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;font-family:inherit}
+.chip .x:active{background:var(--alert);color:#fff}
+.pickbar{display:none;margin:0 0 14px}
+.pickbar.on{display:block}
+.pickbar select{width:100%;padding:12px 14px;border:1.5px solid #DCD3C2;border-radius:10px;
+  background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--hull);
+  appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E1B2A' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 14px center;background-size:16px}
+.viewbar{display:flex;gap:8px;margin:18px 0 12px;background:#E7E0D2;padding:4px;border-radius:11px}
+.viewbar button{flex:1;border:none;background:none;padding:10px 6px;border-radius:8px;font-family:inherit;
+  font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+.viewbar button.on{background:#fff;color:var(--hull);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.cargo-box{border:1.5px solid #E0D8C7;border-radius:var(--r);background:#fff;overflow:hidden;margin-bottom:16px}
+.cargo-box h3{font-family:"Reem Kufi",sans-serif;font-size:14.5px;color:var(--hull);
+  padding:13px 15px;border-bottom:1.5px solid #EFE9DC;background:#FBF8F1}
+.cargo-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px dashed #E8E1D3}
+.cargo-row:last-child{border-bottom:none}
+.cargo-row .nm{flex:1;font-size:14px;font-weight:600}
+.cargo-row .qt{background:#EAF5F1;color:#1F6E58;font-size:11.5px;font-weight:700;
+  padding:4px 9px;border-radius:20px;white-space:nowrap}
+.cargo-row .wt{font-size:14.5px;font-weight:700;color:#9A6907;white-space:nowrap}
+.cargo-row.sum{background:#FFF9EC;border-top:1.5px solid #F0E2C4}
+.grp{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.grp:first-child{margin-top:4px}
+.grp .t{font-family:"Reem Kufi",sans-serif;font-size:14.5px;color:var(--hull)}
+.grp .l{flex:1;height:1px;background:#DCD3C2}
+.grp .v{font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.note{margin-top:12px;font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.8}
+.toast{position:fixed;bottom:18px;right:14px;left:14px;max-width:560px;margin:0 auto;background:var(--hull);color:#fff;
+  padding:13px 15px;border-radius:11px;font-size:13.5px;border-inline-start:4px solid var(--marigold);
+  transform:translateY(150%);transition:transform .3s cubic-bezier(.2,.8,.3,1);z-index:70}
+.toast.show{transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== تسجيل الدخول ===== -->
+<section id="login" class="screen active">
+  <div class="login-card">
+    <div class="ship-art">
+      <svg viewBox="0 0 360 210" role="img" aria-label="باخرة حاويات">
+        <rect width="360" height="210" fill="none"/>
+        <circle cx="292" cy="42" r="26" fill="#F4A81D" opacity=".18"/>
+        <circle cx="292" cy="42" r="15" fill="#F4A81D"/>
+        <!-- الحاويات -->
+        <g>
+          <rect x="76"  y="104" width="46" height="26" rx="2" fill="#C63B3B"/>
+          <rect x="126" y="104" width="46" height="26" rx="2" fill="#2F9E7E"/>
+          <rect x="176" y="104" width="46" height="26" rx="2" fill="#F4A81D"/>
+          <rect x="101" y="76"  width="46" height="26" rx="2" fill="#2F9E7E"/>
+          <rect x="151" y="76"  width="46" height="26" rx="2" fill="#C63B3B"/>
+          <rect x="126" y="48"  width="46" height="26" rx="2" fill="#F4A81D"/>
+          <g fill="rgba(0,0,0,.18)">
+            <rect x="76" y="126" width="146" height="4"/><rect x="101" y="98" width="96" height="4"/><rect x="126" y="70" width="46" height="4"/>
+          </g>
+        </g>
+        <!-- برج القيادة -->
+        <rect x="234" y="72" width="52" height="58" rx="3" fill="#20364C"/>
+        <rect x="244" y="84"  width="12" height="12" rx="1" fill="#F4A81D"/>
+        <rect x="264" y="84"  width="12" height="12" rx="1" fill="#F4A81D" opacity=".5"/>
+        <rect x="244" y="104" width="12" height="12" rx="1" fill="#F4A81D" opacity=".5"/>
+        <rect x="264" y="104" width="12" height="12" rx="1" fill="#F4A81D"/>
+        <rect x="248" y="46" width="20" height="28" rx="3" fill="#16293D"/>
+        <rect x="248" y="46" width="20" height="8"  rx="3" fill="#C63B3B"/>
+        <!-- البدن -->
+        <path d="M40 130h266l-26 42H66z" fill="#12283C"/>
+        <path d="M40 130h266l-5 9H45z" fill="#F4A81D"/>
+        <g fill="#0B1622" opacity=".5">
+          <circle cx="96" cy="150" r="5"/><circle cx="128" cy="150" r="5"/><circle cx="160" cy="150" r="5"/>
+          <circle cx="192" cy="150" r="5"/><circle cx="224" cy="150" r="5"/><circle cx="256" cy="150" r="5"/>
+        </g>
+        <!-- الماء -->
+        <g stroke="#2C4257" stroke-width="4" stroke-linecap="round">
+          <path d="M22 184h64M104 184h84M206 184h60M284 184h54"/>
+          <path d="M56 198h86M162 198h72M254 198h64" opacity=".6"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="brand">
+      <h1>سجل الميناء</h1>
+      <span>تسجيل الشاحنات وأوزان التفريغ</span>
+    </div>
+
+    <div class="err" id="loginErr"></div>
+    <div class="field">
+      <label for="u">اسم المستخدم</label>
+      <input id="u" type="text" dir="ltr" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="p">كلمة المرور</label>
+      <input id="p" type="password" dir="ltr" autocomplete="current-password">
+      <label class="pw-row"><input type="checkbox" id="showPw"> إظهار كلمة المرور</label>
+    </div>
+    <button class="btn" id="loginBtn">دخول</button>
+  </div>
+</section>
+
+<!-- ===== الواجهة الرئيسية ===== -->
+<section id="app" class="screen">
+  <header class="topbar">
+    <div class="wrap topbar-row">
+      <div>
+        <h1>كتابة بيانات الباخرة</h1>
+        <div class="sub" id="opName">المستخدم: —</div>
+      </div>
+      <button class="logout" id="logoutBtn">خروج</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- 1) الباخرة -->
+    <section class="block">
+      <div class="block-head"><div class="n">١</div><h2>بيانات الباخرة</h2></div>
+      <div class="block-body">
+        <div class="f" id="f_ship"><label for="i_ship">اسم الباخرة</label><input id="i_ship" type="text" placeholder="اسم الباخرة"><div class="msg"></div></div>
+        <div class="f" id="f_company"><label for="i_company">الشركة</label><input id="i_company" type="text" placeholder="الشركة المالكة أو الوكيل"><div class="msg"></div></div>
+        <div class="f" id="f_date"><label for="i_date">التاريخ</label><input id="i_date" type="date"><div class="msg"></div></div>
+      </div>
+    </section>
+
+    <!-- 2) الموظف والدوام -->
+    <section class="block">
+      <div class="block-head"><div class="n">٢</div><h2>الموظف والدوام</h2><button class="sheet-del" id="delSheetBtn">حذف الورقة</button></div>
+      <div class="tabs" id="tabs"></div>
+      <div class="block-body">
+        <div class="f" id="f_staff"><label for="i_staff">اسم الموظف</label>
+          <input id="i_staff" type="text" placeholder="اسم الموظف المسؤول"><div class="msg"></div></div>
+        <div class="f"><label>فترة الدوام</label>
+          <div class="shift">
+            <label><input type="radio" name="shift" value="صباحي" checked><span class="opt">صباحي</span></label>
+            <label><input type="radio" name="shift" value="مسائي"><span class="opt">مسائي</span></label>
+          </div>
+        </div>
+        <div class="f" style="margin-bottom:0"><label for="i_start">وقت بدء الدوام<button class="now" data-now="i_start">الآن</button></label>
+          <input id="i_start" type="time"><div class="msg"></div></div>
+      </div>
+    </section>
+
+    <!-- 3) الشاحنة -->
+    <section class="block">
+      <div class="block-head"><div class="n">٣</div><h2>معلومات الشاحنة</h2><span class="pin edit-badge" id="editBadge" style="display:none">وضع التعديل</span></div>
+      <div class="block-body">
+        <div class="grid2">
+          <div class="f" id="f_plate"><label for="i_plate">رقم السيارة</label>
+            <input id="i_plate" type="tel" inputmode="numeric" pattern="[0-9]*" class="mono ltr" placeholder="0000"><div class="msg"></div></div>
+          <div class="f" id="f_cargo"><label for="i_cargo">نوع الشحنة</label>
+            <input id="i_cargo" type="text" placeholder="قمح، إسمنت…"><div class="msg"></div></div>
+        </div>
+        <div class="chips" id="cargoChips"></div>
+        <div class="f" id="f_receipt" style="display:none"><label for="i_receipt">رقم الإيصال</label>
+          <input id="i_receipt" type="tel" inputmode="numeric" pattern="[0-9]*" class="mono ltr" placeholder="0000"><div class="msg"></div></div>
+        <div class="f" id="f_driver"><label for="i_driver">اسم السائق</label>
+          <input id="i_driver" type="text" placeholder="اسم السائق"><div class="msg"></div></div>
+        <div class="grid2">
+          <div class="f" id="f_arrive"><label for="i_arrive">موعد وصول السائق<button class="now" data-now="i_arrive">الآن</button></label>
+            <input id="i_arrive" type="time" class="mono"><div class="msg"></div></div>
+          <div class="f" id="f_weight"><label for="i_weight">وزن السيارة</label>
+            <div class="unit"><input id="i_weight" type="text" inputmode="decimal" pattern="[0-9.]*" class="mono ltr" placeholder="0"><i>كجم</i></div>
+            <div class="msg"></div></div>
+        </div>
+        <div class="actions">
+          <button class="btn-dark" id="saveBtn">إضافة الشاحنة</button>
+          <button class="btn-ghost" id="clearBtn">تفريغ</button>
+          <button class="btn-ghost" id="cancelEditBtn" style="display:none">إلغاء</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="totals">
+      <div class="stat"><b class="mono" id="cnt">0</b><small>شاحنات هذه الورقة</small></div>
+      <div class="stat gold"><b class="mono" id="tot">0</b><small>وزن هذه الورقة (كجم)</small></div>
+    </div>
+    <div class="grand"><span>إجمالي جميع الأوزان</span><b class="mono" id="grand">0<i>كجم</i></b></div>
+
+    <div class="viewbar" id="viewbar">
+      <button data-view="new" class="on">حسب الأحدث</button>
+      <button data-view="cargo">حسب نوع الشحنة</button>
+      <button data-view="sum">ملخّص الأنواع</button>
+    </div>
+
+    <div class="pickbar" id="pickbar"><select id="cargoPick"></select></div>
+
+    <div id="list"></div>
+
+    <div class="exports">
+      <button class="export" id="xlsBtn" disabled>طباعة ملف Excel</button>
+    </div>
+    <p class="note" id="note"></p>
+  </div>
+</section>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h3 id="mTitle">تأكيد</h3>
+    <p id="mText"></p>
+    <div class="modal-acts">
+      <button class="btn-ghost" id="mNo">إلغاء</button>
+      <button class="btn-danger" id="mYes">حذف</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== مولّد ملفات إكسل (xlsx) بعدة أوراق — بدون مكتبات خارجية ===== */
+var XLSX_MINI = (function(){
+  var enc = new TextEncoder(), TBL = null;
+  function table(){
+    if(TBL) return TBL;
+    TBL = new Uint32Array(256);
+    for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; TBL[n]=c>>>0; }
+    return TBL;
+  }
+  function crc32(buf){
+    var t=table(), c=0xFFFFFFFF;
+    for(var i=0;i<buf.length;i++) c = t[(c ^ buf[i]) & 0xFF] ^ (c>>>8);
+    return (c ^ 0xFFFFFFFF)>>>0;
+  }
+  function zip(files){
+    var parts=[], central=[], offset=0;
+    files.forEach(function(f){
+      var name=enc.encode(f.name), data=f.data, crc=crc32(data);
+      var lh=new Uint8Array(30+name.length), dv=new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0x0800,true);
+      dv.setUint32(14,crc,true); dv.setUint32(18,data.length,true); dv.setUint32(22,data.length,true);
+      dv.setUint16(26,name.length,true); lh.set(name,30);
+      parts.push(lh,data);
+      var ch=new Uint8Array(46+name.length), cv=new DataView(ch.buffer);
+      cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0x0800,true);
+      cv.setUint32(16,crc,true); cv.setUint32(20,data.length,true); cv.setUint32(24,data.length,true);
+      cv.setUint16(28,name.length,true); cv.setUint32(42,offset,true); ch.set(name,46);
+      central.push(ch);
+      offset += lh.length + data.length;
+    });
+    var cdSize=0; central.forEach(function(c){ cdSize += c.length; });
+    var end=new Uint8Array(22), ev=new DataView(end.buffer);
+    ev.setUint32(0,0x06054b50,true); ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
+    ev.setUint32(12,cdSize,true); ev.setUint32(16,offset,true);
+    var all=parts.concat(central,[end]), total=0;
+    all.forEach(function(a){ total += a.length; });
+    var out=new Uint8Array(total), p=0;
+    all.forEach(function(a){ out.set(a,p); p += a.length; });
+    return out;
+  }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function colName(n){ var s=""; while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26);} return s; }
+  function safeName(s,used){
+    var n = String(s||"ورقة").replace(/[\\\/\?\*\[\]:]/g," ").slice(0,28).trim() || "ورقة";
+    var b=n, i=2; while(used.indexOf(n)>-1){ n = (b+" "+i).slice(0,31); i++; }
+    used.push(n); return n;
+  }
+  /* أنماط الخلايا: 0 عادي، 1 عنوان رئيسي، 2 تسمية، 3 رأس جدول، 4 إجمالي، 5 رقم */
+  var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts>'+
+    '<fonts count="5">'+
+    '<font><sz val="11"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="15"/><color rgb="FF0E1B2A"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="11"/><color rgb="FF12212F"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="12"/><color rgb="FF22160A"/><name val="Calibri"/></font></fonts>'+
+    '<fills count="5">'+
+    '<fill><patternFill patternType="none"/></fill>'+
+    '<fill><patternFill patternType="gray125"/></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FF0E1B2A"/><bgColor indexed="64"/></patternFill></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF2EDE3"/><bgColor indexed="64"/></patternFill></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF4A81D"/><bgColor indexed="64"/></patternFill></fill></fills>'+
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+
+    '<border><left style="thin"><color rgb="FFBFB6A5"/></left><right style="thin"><color rgb="FFBFB6A5"/></right>'+
+    '<top style="thin"><color rgb="FFBFB6A5"/></top><bottom style="thin"><color rgb="FFBFB6A5"/></bottom><diagonal/></border></borders>'+
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="6">'+
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'+
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center"/></xf>'+
+    '<xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'+
+    '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'+
+    '<xf numFmtId="164" fontId="4" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'+
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center"/></xf>'+
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+  function sheetXml(sh){
+    var rows = sh.rows || [], widths = sh.widths || [], maxc = 1;
+    var body = rows.map(function(row,ri){
+      if(!row || !row.length) return '<row r="'+(ri+1)+'"/>';
+      maxc = Math.max(maxc, row.length);
+      var cells = row.map(function(cell,ci){
+        var v = (cell && typeof cell === "object") ? cell.v : cell;
+        var s = (cell && typeof cell === "object" && cell.s != null) ? cell.s : 0;
+        if(v === "" || v == null) return '<c r="'+colName(ci+1)+(ri+1)+'" s="'+s+'"/>';
+        var ref = colName(ci+1)+(ri+1);
+        if(typeof v === "number" && isFinite(v)) return '<c r="'+ref+'" s="'+s+'"><v>'+v+'</v></c>';
+        return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+      }).join("");
+      return '<row r="'+(ri+1)+'" ht="20" customHeight="1">'+cells+'</row>';
+    }).join("");
+    var cols = widths.length ? '<cols>'+widths.map(function(w,i){
+      return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols>' : '';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<dimension ref="A1:'+colName(maxc)+Math.max(1,rows.length)+'"/>'+
+      '<sheetViews><sheetView rightToLeft="1" showGridLines="0" workbookViewId="0"/></sheetViews>'+
+      '<sheetFormatPr defaultRowHeight="18"/>'+cols+
+      '<sheetData>'+body+'</sheetData>'+
+      '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
+      '<pageSetup orientation="portrait" paperSize="9" fitToWidth="1" fitToHeight="0"/>'+
+      '</worksheet>';
+  }
+
+  function build(sheets){
+    var used = [];
+    var names = sheets.map(function(s){ return safeName(s.name, used); });
+    var files = [];
+    var types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      sheets.map(function(s,i){ return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join("")+
+      '</Types>';
+    var wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '+
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+      names.map(function(n,i){ return '<sheet name="'+esc(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join("")+
+      '</sheets></workbook>';
+    var wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      names.map(function(n,i){ return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join("")+
+      '<Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+      '</Relationships>';
+    files.push({ name:"[Content_Types].xml", data:enc.encode(types) });
+    files.push({ name:"_rels/.rels", data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+      '</Relationships>') });
+    files.push({ name:"xl/workbook.xml", data:enc.encode(wb) });
+    files.push({ name:"xl/_rels/workbook.xml.rels", data:enc.encode(wbRels) });
+    files.push({ name:"xl/styles.xml", data:enc.encode(STYLES) });
+    sheets.forEach(function(s,i){ files.push({ name:"xl/worksheets/sheet"+(i+1)+".xml", data:enc.encode(sheetXml(s)) }); });
+    return zip(files);
+  }
+  return { build: build };
+})();
+(function(){
+  "use strict";
+  var USERS = { "rasef":"12345", "mstawda":"12345" };
+  var user = "", uid = "";
+  function KEY(){ return "port_log_v2_" + (uid || "guest"); }
+  function blankState(){ return { ship:"", company:"", date:"", cargos:[], sheets:[], active:0 }; }
+
+  var state = blankState();
+
+  var $ = function(id){ return document.getElementById(id); };
+  var pad = function(n){ return String(n).padStart(2,"0"); };
+  var num = function(n){ return Number(n||0).toLocaleString("en-US"); };
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function nowHM(){ var d=new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+  function dmy(iso){ if(!iso) return ""; var p=iso.split("-"); return p.length===3 ? p[2]+"/"+p[1]+"/"+p[0] : iso; }
+  var toastT;
+  function toast(m){ var t=$("toast"); t.textContent=m; t.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("show"); },2600); }
+
+  /* ---- الحفظ الدائم ---- */
+  var store = {
+    load: async function(){
+      var k=KEY();
+      try{ if(window.storage){ var r=await window.storage.get(k); if(r&&r.value) return JSON.parse(r.value); } }catch(e){}
+      try{ var v=localStorage.getItem(k); if(v) return JSON.parse(v); }catch(e){}
+      return null;
+    },
+    save: async function(d){
+      var k=KEY(), j=JSON.stringify(d);
+      try{ if(window.storage){ await window.storage.set(k,j); return true; } }catch(e){}
+      try{ localStorage.setItem(k,j); return true; }catch(e){}
+      return false;
+    }
+  };
+  function persist(){ store.save(state); }
+
+  /* ---- الأوراق ---- */
+  function newSheet(staff, shift, start){
+    return { id: Date.now()+"-"+Math.random().toString(36).slice(2,6),
+             staff: staff||"", shift: shift||"صباحي", start: start||nowHM(), serial:0, records:[] };
+  }
+  function sheet(){ if(!state.sheets.length) state.sheets.push(newSheet()); 
+    if(state.active >= state.sheets.length) state.active = 0; return state.sheets[state.active]; }
+  function sheetTitle(s){ return (s.staff || "بدون اسم") + " · " + s.shift; }
+
+  /* ---- الدخول ---- */
+  /* تحويل الأرقام العربية والفارسية إلى لاتينية */
+  function toLatin(v){
+    return String(v||"").replace(/[\u0660-\u0669]/g, function(c){ return String(c.charCodeAt(0)-0x0660); })
+                        .replace(/[\u06F0-\u06F9]/g, function(c){ return String(c.charCodeAt(0)-0x06F0); });
+  }
+
+  function login(){
+    var raw=toLatin($("u").value).trim(), u=raw.toLowerCase(),
+        p=toLatin($("p").value).trim(), e=$("loginErr");
+    if(!raw || !p){ e.textContent="أدخل اسم المستخدم وكلمة المرور."; e.classList.add("show"); return; }
+    if(!Object.prototype.hasOwnProperty.call(USERS,u) || USERS[u]!==p){
+      e.textContent="اسم المستخدم أو كلمة المرور غير صحيحة."; e.classList.add("show"); return; }
+    e.classList.remove("show");
+    uid = u;
+    user = (u==="rasef") ? "Rasef" : "Mstawda";
+    $("opName").textContent = "المستخدم: "+user;
+    $("f_receipt").style.display = hasReceipt() ? "" : "none";
+    $("login").classList.remove("active"); $("app").classList.add("active");
+    try { window.scrollTo(0,0); } catch(err){}
+    loadUserData();
+  }
+  function hasReceipt(){ return uid === "rasef"; }
+
+  async function loadUserData(){
+    var saved = await store.load();
+    state = (saved && Array.isArray(saved.sheets) && saved.sheets.length) ? saved : blankState();
+    if(!Array.isArray(state.cargos)) state.cargos = [];
+    if(!state.sheets.length) state.sheets.push(newSheet());
+    if(!state.date) state.date = todayISO();
+    if(state.active >= state.sheets.length) state.active = 0;
+    $("i_ship").value = state.ship || "";
+    $("i_company").value = state.company || "";
+    $("i_date").value = state.date;
+    view = "new"; pick = "";
+    $("viewbar").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.dataset.view==="new"); });
+    endEdit(); loadSheetIntoForm(); clearForm(); render();
+  }
+  $("loginBtn").addEventListener("click", login);
+  $("showPw").addEventListener("change", function(ev){ $("p").type = ev.target.checked ? "text" : "password"; });
+  ["u","p"].forEach(function(id){ $(id).addEventListener("keydown", function(ev){ if(ev.key==="Enter") login(); }); });
+  $("logoutBtn").addEventListener("click", function(){
+    $("app").classList.remove("active"); $("login").classList.add("active");
+    $("p").value=""; user=""; uid=""; state = blankState();
+  });
+
+  /* ---- تصحيح الأرقام العربية في الحقول الرقمية ---- */
+  ["i_plate","i_weight","i_receipt"].forEach(function(id){
+    var el=$(id); if(!el) return;
+    el.addEventListener("input", function(){
+      var v=toLatin(el.value);
+      if(v!==el.value){ var s0=el.selectionStart; el.value=v; try{ el.setSelectionRange(s0,s0); }catch(e){} }
+    });
+  });
+
+  /* ---- أزرار «الآن» ---- */
+  document.querySelectorAll(".now").forEach(function(b){
+    b.addEventListener("click", function(ev){ ev.preventDefault();
+      $(b.dataset.now).value = nowHM();
+      if(b.dataset.now==="i_start"){ sheet().start = nowHM(); persist(); }
+    });
+  });
+
+  /* ---- بيانات الباخرة ---- */
+  ["ship","company","date"].forEach(function(k){
+    $("i_"+k).addEventListener("input", function(){ state[k]=$("i_"+k).value; persist(); });
+  });
+
+  /* ---- الموظف / الوردية ---- */
+  $("i_staff").addEventListener("change", function(){
+    var name=$("i_staff").value.trim(), cur=sheet();
+    if(!name || name===cur.staff) return;
+    if(cur.records.length){
+      var s=newSheet(name, cur.shift, nowHM());
+      state.sheets.push(s); state.active = state.sheets.length-1;
+      $("i_start").value = s.start;
+      toast("تم فتح ورقة جديدة باسم "+name+".");
+    } else { cur.staff = name; }
+    persist(); render();
+  });
+  document.querySelectorAll('input[name="shift"]').forEach(function(r){
+    r.addEventListener("change", function(){ sheet().shift=r.value; persist(); render(); });
+  });
+  $("i_start").addEventListener("change", function(){ sheet().start=$("i_start").value; persist(); });
+
+  function loadSheetIntoForm(){
+    var s=sheet();
+    $("i_staff").value = s.staff;
+    $("i_start").value = s.start || nowHM();
+    var r=document.querySelector('input[name="shift"][value="'+s.shift+'"]'); if(r) r.checked=true;
+  }
+
+  /* ---- إضافة شاحنة ---- */
+  var TRUCK = [
+    { key:"plate",  label:"رقم السيارة", check:function(v){ return v.length<2 ? "أدخل رقم السيارة." : ""; } },
+    { key:"cargo",  label:"نوع الشحنة",  check:function(v){ return v.length<2 ? "أدخل نوع الشحنة." : ""; } },
+    { key:"driver", label:"اسم السائق",  check:function(v){ return v.length<3 ? "أدخل اسم السائق." : ""; } },
+    { key:"arrive", label:"وقت الوصول",  check:function(v){ return !v ? "حدّد موعد الوصول." : ""; } },
+    { key:"weight", label:"الوزن (كجم)", check:function(v){ v=v.replace(/,/g,"");
+        return (v===""||isNaN(+v)) ? "أدخل الوزن بالأرقام." : (+v<=0 ? "يجب أن يكون الوزن أكبر من صفر." : ""); } }
+  ];
+  function flag(id, msg){
+    var box=$("f_"+id), inp=$("i_"+id);
+    if(inp) inp.classList.toggle("bad", !!msg);
+    if(!box) return;
+    box.classList.toggle("bad", !!msg);
+    var m=box.querySelector(".msg"); if(m) m.textContent = msg || "";
+  }
+  function save(){
+    var ok=true, first=null, s=sheet();
+    if(!state.ship.trim()){ flag("ship","أدخل اسم الباخرة أولاً."); ok=false; first=$("i_ship"); } else flag("ship","");
+    if(!s.staff){ flag("staff","أدخل اسم الموظف أولاً."); ok=false; first=first||$("i_staff"); } else flag("staff","");
+
+    var rec={ no:0 };
+    TRUCK.forEach(function(f){
+      var v=$("i_"+f.key).value.trim(), m=f.check(v);
+      flag(f.key, m);
+      if(m){ ok=false; first=first||$("i_"+f.key); }
+      rec[f.key]=v;
+    });
+    if(hasReceipt()){
+      var rv=$("i_receipt").value.trim();
+      var rm = rv.length<1 ? "أدخل رقم الإيصال." : "";
+      flag("receipt", rm);
+      if(rm){ ok=false; first=first||$("i_receipt"); }
+      rec.receipt = rv;
+    }
+    if(!ok){ first.focus(); toast("راجع الحقول المظللة قبل الحفظ."); return; }
+
+    rec.weight = Number(String(rec.weight).replace(/,/g,""));
+    rememberCargo(rec.cargo);
+    if(editNo){
+      var i=s.records.findIndex(function(x){ return x.no===editNo; });
+      if(i>-1){ rec.no = editNo; s.records[i]=rec; }
+      var n=editNo; endEdit(); persist(); render(); clearForm();
+      toast("تم حفظ تعديل قسيمة رقم "+String(n).padStart(3,"0")+".");
+      return;
+    }
+    rec.no = ++s.serial;
+    s.records.unshift(rec);
+    persist(); render(); clearForm();
+    toast("تمت إضافة الشاحنة "+rec.plate+" — "+num(rec.weight)+" كجم.");
+  }
+  /* ---- ذاكرة أنواع الشحنة ---- */
+  function rememberCargo(v){
+    v = String(v||"").trim();
+    if(!v) return;
+    if(!Array.isArray(state.cargos)) state.cargos = [];
+    var i = state.cargos.indexOf(v);
+    if(i>-1) state.cargos.splice(i,1);
+    state.cargos.unshift(v);
+    if(state.cargos.length>12) state.cargos.length = 12;
+    renderChips();
+  }
+  function renderChips(){
+    var list = Array.isArray(state.cargos) ? state.cargos : [];
+    $("cargoChips").innerHTML = list.map(function(c){
+      return '<span class="chip"><button class="u" data-use="'+esc(c)+'">'+esc(c)+'</button>'+
+             '<button class="x" data-drop="'+esc(c)+'" aria-label="حذف">\u2715</button></span>';
+    }).join("");
+    $("cargoChips").querySelectorAll("[data-use]").forEach(function(b){
+      b.addEventListener("click", function(){ $("i_cargo").value = b.dataset.use; flag("cargo",""); });
+    });
+    $("cargoChips").querySelectorAll("[data-drop]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var i = state.cargos.indexOf(b.dataset.drop);
+        if(i>-1){ state.cargos.splice(i,1); persist(); renderChips(); }
+      });
+    });
+  }
+
+  /* ---- نافذة التأكيد ---- */
+  var _yes=null;
+  function ask(title, text, cb){
+    $("mTitle").textContent = title;
+    $("mText").textContent = text;
+    _yes = cb;
+    $("modal").classList.add("on");
+  }
+  function closeAsk(){ $("modal").classList.remove("on"); _yes=null; }
+  $("mNo").addEventListener("click", closeAsk);
+  $("modal").addEventListener("click", function(e){ if(e.target===$("modal")) closeAsk(); });
+  $("mYes").addEventListener("click", function(){ var f=_yes; closeAsk(); if(f) f(); });
+
+  /* ---- وضع التعديل ---- */
+  var editNo = 0;
+  function startEdit(no){
+    var r = sheet().records.find(function(x){ return x.no===no; });
+    if(!r) return;
+    editNo = no;
+    $("i_plate").value  = r.plate;
+    $("i_cargo").value  = r.cargo;
+    $("i_driver").value = r.driver;
+    $("i_arrive").value = r.arrive;
+    $("i_weight").value = r.weight;
+    $("i_receipt").value = r.receipt || "";
+    ["plate","cargo","driver","arrive","weight","receipt"].forEach(function(k){ flag(k,""); });
+    $("saveBtn").textContent = "حفظ التعديل";
+    $("cancelEditBtn").style.display = "";
+    $("clearBtn").style.display = "none";
+    $("editBadge").style.display = "";
+    render();
+    try { $("i_plate").scrollIntoView({behavior:"smooth", block:"center"}); } catch(e){}
+    toast("تعديل قسيمة رقم "+String(no).padStart(3,"0"));
+  }
+  function endEdit(){
+    editNo = 0;
+    $("saveBtn").textContent = "إضافة الشاحنة";
+    $("cancelEditBtn").style.display = "none";
+    $("clearBtn").style.display = "";
+    $("editBadge").style.display = "none";
+  }
+  $("cancelEditBtn").addEventListener("click", function(){ endEdit(); clearForm(); render(); toast("تم إلغاء التعديل."); });
+
+  /* ---- حذف ورقة موظف ---- */
+  $("delSheetBtn").addEventListener("click", function(){
+    var s=sheet();
+    if(state.sheets.length<2 && !s.records.length){ toast("لا توجد ورقة لحذفها."); return; }
+    ask("حذف ورقة الموظف",
+        "سيتم حذف ورقة \u201C"+(s.staff||"بدون اسم")+"\u201D مع "+s.records.length+
+        " شاحنة مسجّلة فيها. لا يمكن التراجع عن هذه العملية.",
+        function(){
+          state.sheets.splice(state.active,1);
+          if(!state.sheets.length) state.sheets.push(newSheet());
+          state.active = Math.max(0, Math.min(state.active, state.sheets.length-1));
+          endEdit(); persist(); render(); loadSheetIntoForm(); clearForm();
+          toast("تم حذف الورقة.");
+        });
+  });
+
+  function clearForm(){
+    ["plate","cargo","driver","weight","receipt"].forEach(function(k){ $("i_"+k).value=""; flag(k,""); });
+    $("i_arrive").value = nowHM(); flag("arrive","");
+    $("i_plate").focus();
+  }
+  $("saveBtn").addEventListener("click", save);
+  $("clearBtn").addEventListener("click", clearForm);
+
+  /* ---- العرض ---- */
+  var view = "new", pick = "";
+  $("viewbar").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      view = b.dataset.view;
+      $("viewbar").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      render();
+    });
+  });
+  $("cargoPick").addEventListener("change", function(){ pick = $("cargoPick").value; render(); });
+
+  function render(){
+    var s=sheet();
+    renderChips();
+    if(view!=="cargo"){ $("pickbar").classList.remove("on"); pick = ""; }
+    /* التبويبات */
+    var tabs = state.sheets.map(function(sh,i){
+      return '<button class="tab'+(i===state.active?" on":"")+'" data-i="'+i+'">'+
+             esc(sheetTitle(sh))+' · '+sh.records.length+'</button>';
+    }).join("");
+    $("tabs").innerHTML = tabs + '<button class="tab add" data-add="1">+ ورقة جديدة</button>';
+    $("tabs").querySelectorAll(".tab").forEach(function(b){
+      b.addEventListener("click", function(){
+        endEdit();
+        if(b.dataset.add){
+          state.sheets.push(newSheet("", s.shift, nowHM()));
+          state.active = state.sheets.length-1;
+          persist(); render(); loadSheetIntoForm(); $("i_staff").focus();
+          toast("ورقة جديدة — أدخل اسم الموظف.");
+        } else {
+          state.active = +b.dataset.i; persist(); render(); loadSheetIntoForm();
+        }
+      });
+    });
+
+    var recs=s.records;
+    var sheetTotal = recs.reduce(function(a,r){ return a+Number(r.weight); },0);
+    var all = state.sheets.reduce(function(a,sh){
+      return a + sh.records.reduce(function(x,r){ return x+Number(r.weight); },0); },0);
+    $("cnt").textContent = num(recs.length);
+    $("tot").textContent = num(sheetTotal);
+    $("grand").innerHTML = num(all)+'<i>كجم</i>';
+
+    var anyRec = state.sheets.some(function(sh){ return sh.records.length; });
+    $("xlsBtn").disabled = !anyRec;
+
+    if(!recs.length){
+      $("list").innerHTML = '<div class="empty"><b>لا توجد شاحنات في هذه الورقة</b>'+
+        '<p>أضف الشاحنة الأولى من القسم الثالث،<br>وستظهر هنا كقسيمة وزن مستقلة.</p></div>';
+      return;
+    }
+
+    if(view==="sum"){
+      $("list").innerHTML = cargoBox("أنواع الشحنات في هذه الورقة", groupCargo(recs)) +
+        (state.sheets.length>1 ? cargoBox("أنواع الشحنات في جميع الأوراق", groupCargo(allRecords())) : "");
+      return;
+    }
+
+    if(view==="cargo"){
+      var groups = groupCargo(recs);
+      var names = groups.map(function(g){ return g.name; });
+      if(pick && names.indexOf(pick)<0) pick = "";
+      $("pickbar").classList.add("on");
+      $("cargoPick").innerHTML =
+        '<option value="">كل الأنواع (' + num(recs.length) + ' شاحنة)</option>' +
+        groups.map(function(g){
+          return '<option value="'+esc(g.name)+'"'+(pick===g.name?" selected":"")+'>'+
+                 esc(g.name)+' — '+num(g.count)+' شاحنة · '+num(g.weight)+' كجم</option>';
+        }).join("");
+      var shown = pick ? groups.filter(function(g){ return g.name===pick; }) : groups;
+      $("list").innerHTML = shown.map(function(g){
+        return '<div class="grp"><span class="t">'+esc(g.name)+'</span><span class="l"></span>'+
+               '<span class="v">'+num(g.count)+' شاحنة · '+num(g.weight)+' كجم</span></div>'+
+               g.items.map(slipHTML).join("");
+      }).join("");
+      bindSlips(s);
+      return;
+    }
+
+    $("list").innerHTML = recs.map(slipHTML).join("");
+    bindSlips(s);
+  }
+
+  /* ---- تجميع حسب نوع الشحنة ---- */
+  function allRecords(){
+    return state.sheets.reduce(function(a,sh){ return a.concat(sh.records); },[]);
+  }
+  function groupCargo(recs){
+    var map={}, order=[];
+    recs.forEach(function(r){
+      var k=(r.cargo||"بدون نوع").trim() || "بدون نوع";
+      if(!map[k]){ map[k]={name:k,count:0,weight:0,items:[]}; order.push(k); }
+      map[k].count++; map[k].weight+=Number(r.weight); map[k].items.push(r);
+    });
+    return order.map(function(k){ return map[k]; })
+                .sort(function(a,b){ return b.weight-a.weight; });
+  }
+  function cargoBox(title, groups){
+    var tc=0, tw=0;
+    var rows = groups.map(function(g){
+      tc+=g.count; tw+=g.weight;
+      return '<div class="cargo-row"><span class="nm">'+esc(g.name)+'</span>'+
+             '<span class="qt">'+num(g.count)+' شاحنة</span>'+
+             '<span class="wt mono">'+num(g.weight)+'</span></div>';
+    }).join("");
+    return '<div class="cargo-box"><h3>'+esc(title)+'</h3>'+rows+
+      '<div class="cargo-row sum"><span class="nm">الإجمالي</span>'+
+      '<span class="qt">'+num(tc)+' شاحنة</span>'+
+      '<span class="wt mono">'+num(tw)+'</span></div></div>';
+  }
+
+  function slipHTML(r){
+      return '<article class="slip'+(editNo===r.no?' editing':'')+'">'+
+        '<div class="slip-top"><div>'+
+          '<div class="serial mono">قسيمة رقم '+String(r.no).padStart(3,"0")+'</div>'+
+          '<div class="plate mono ltr">'+esc(r.plate)+'</div></div>'+
+          '<div class="stamp"><b class="mono">'+num(r.weight)+'</b><small>كجم</small></div></div>'+
+        '<div class="slip-rows">'+
+          (r.receipt ? '<div class="row"><span>رقم الإيصال</span><b class="mono">'+esc(r.receipt)+'</b></div>' : '')+
+          '<div class="row"><span>نوع الشحنة</span><b>'+esc(r.cargo)+'</b></div>'+
+          '<div class="row"><span>اسم السائق</span><b>'+esc(r.driver)+'</b></div>'+
+          '<div class="row"><span>موعد الوصول</span><b class="mono">'+esc(r.arrive)+'</b></div>'+
+        '</div><div class="slip-acts">'+
+          '<button class="edt" data-edit="'+r.no+'">تعديل</button>'+
+          '<button class="del" data-no="'+r.no+'">حذف</button>'+
+        '</div></article>';
+  }
+
+  function bindSlips(s){
+    $("list").querySelectorAll(".del").forEach(function(b){
+      b.addEventListener("click", function(){
+        var no=+b.dataset.no;
+        var r=s.records.find(function(x){ return x.no===no; });
+        ask("حذف القسيمة","هل تريد حذف قسيمة رقم "+String(no).padStart(3,"0")+
+            (r? " (سيارة "+r.plate+")" : "")+" نهائياً؟", function(){
+          var i=s.records.findIndex(function(x){ return x.no===no; });
+          if(i>-1){ s.records.splice(i,1); if(editNo===no) endEdit(); persist(); render(); toast("تم حذف القسيمة."); }
+        });
+      });
+    });
+    $("list").querySelectorAll(".edt").forEach(function(b){
+      b.addEventListener("click", function(){ startEdit(+b.dataset.edit); });
+    });
+  }
+
+  /* ---- التصدير ---- */
+  function stamp(){ var d=new Date();
+    return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes()); }
+  function b64(u8){
+    var s="", CH=0x8000;
+    for(var i=0;i<u8.length;i+=CH){ s += String.fromCharCode.apply(null, u8.subarray(i,i+CH)); }
+    return btoa(s);
+  }
+  function browserSave(data, type, name){
+    var blob=new Blob([data],{type:type}), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); },1500);
+  }
+  async function saveAndShare(u8, name){
+    var C = window.Capacitor;
+    var native = C && ((C.isNativePlatform && C.isNativePlatform()) || C.isNative);
+    var P = C && C.Plugins;
+    if(native && P && P.Filesystem){
+      var data = b64(u8), res = null, used = "", dirs = ["CACHE","EXTERNAL","DATA","DOCUMENTS"];
+      for(var k=0;k<dirs.length;k++){
+        try {
+          res = await P.Filesystem.writeFile({ path:name, data:data, directory:dirs[k], recursive:true });
+          used = dirs[k]; break;
+        } catch(e){ res = null; }
+      }
+      if(!res || !res.uri){ toast("تعذّر إنشاء الملف على الجهاز."); return; }
+
+      /* نسخة إضافية في مجلد المستندات إن أمكن */
+      if(used!=="DOCUMENTS"){
+        try { await P.Filesystem.writeFile({ path:name, data:data, directory:"DOCUMENTS", recursive:true }); }
+        catch(e){}
+      }
+
+      if(P.Share){
+        try {
+          var can = true;
+          if(P.Share.canShare){ var c = await P.Share.canShare(); can = !!(c && c.value); }
+          if(can){
+            await P.Share.share({ title:"سجل الميناء", text:name, url:res.uri, dialogTitle:"احفظ الملف أو أرسله" });
+            return;
+          }
+        } catch(e){
+          if(String(e && e.message||"").indexOf("cancel")>-1) return;
+        }
+      }
+      toast("تم حفظ الملف باسم "+name+" في مجلد Documents.");
+      return;
+    }
+    browserSave(u8, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", name);
+    toast("تم إنشاء ملف Excel منسّق.");
+  }
+  function cols(){
+    return hasReceipt()
+      ? { head:["م","رقم الإيصال","رقم السيارة","نوع الشحنة","اسم السائق","موعد الوصول","الوزن (كجم)"],
+          widths:[7,16,16,18,22,14,16],
+          row:function(r){ return [r.no, r.receipt||"", r.plate, r.cargo, r.driver, r.arrive]; } }
+      : { head:["م","رقم السيارة","نوع الشحنة","اسم السائق","موعد الوصول","الوزن (كجم)"],
+          widths:[7,16,18,22,14,16],
+          row:function(r){ return [r.no, r.plate, r.cargo, r.driver, r.arrive]; } };
+  }
+  function sheetRows(sh){
+    var C=function(v,s){ return {v:v,s:s}; };
+    var cf=cols(), W=cf.head.length, rows=[];
+    rows.push([C("سجل تفريغ الباخرة",1)]);
+    rows.push([]);
+    rows.push([C("اسم الباخرة",2), state.ship, C("الشركة",2), state.company, C("التاريخ",2), dmy(state.date)]);
+    rows.push([C("اسم الموظف",2), sh.staff, C("فترة الدوام",2), sh.shift, C("بدء الدوام",2), sh.start]);
+    rows.push([]);
+    rows.push(cf.head.map(function(h){ return C(h,3); }));
+    sh.records.slice().sort(function(a,b){ return a.no-b.no; }).forEach(function(r){
+      rows.push(cf.row(r).concat([C(Number(r.weight),5)]));
+    });
+    var t=sh.records.reduce(function(a,r){ return a+Number(r.weight); },0);
+    var tot=[]; for(var q=0;q<W;q++) tot.push(C("",4));
+    tot[0]=C("إجمالي الورقة",4);
+    tot[W-2]=C("عدد الشاحنات: "+sh.records.length,4);
+    tot[W-1]=C(t,4);
+    rows.push(tot);
+    var gs = groupCargo(sh.records);
+    if(gs.length){
+      rows.push([]);
+      rows.push([C("ملخّص حسب نوع الشحنة",2)]);
+      rows.push([C("نوع الشحنة",3),C("عدد الشاحنات",3),C("الوزن (كجم)",3)]);
+      gs.forEach(function(g){ rows.push([g.name, g.count, C(g.weight,5)]); });
+      rows.push([C("الإجمالي",4),C(sh.records.length,4),C(t,4)]);
+    }
+    return { rows: rows, widths: cf.widths };
+  }
+  $("xlsBtn").addEventListener("click", function(){
+    var C=function(v,s){ return {v:v,s:s}; };
+    var books = state.sheets.filter(function(sh){ return sh.records.length; }).map(function(sh){
+      var b = sheetRows(sh);
+      return { name: sheetTitle(sh), rows: b.rows, widths: b.widths };
+    });
+    if(!books.length){ toast("لا توجد بيانات للتصدير."); return; }
+    if(books.length>1){
+      var rows=[[C("ملخّص جميع الأوراق",1)],[],
+        [C("اسم الباخرة",2), state.ship, C("الشركة",2), state.company, C("التاريخ",2), dmy(state.date)],[],
+        [C("الموظف",3),C("فترة الدوام",3),C("بدء الدوام",3),C("عدد الشاحنات",3),C("الوزن (كجم)",3)]];
+      var g=0, n=0;
+      state.sheets.forEach(function(sh){
+        if(!sh.records.length) return;
+        var t=sh.records.reduce(function(a,r){ return a+Number(r.weight); },0);
+        g+=t; n+=sh.records.length;
+        rows.push([sh.staff, sh.shift, sh.start, sh.records.length, C(t,5)]);
+      });
+      rows.push([C("الإجمالي العام",4),C("",4),C("",4),C(n,4),C(g,4)]);
+      rows.push([]);
+      rows.push([C("ملخّص حسب نوع الشحنة (جميع الأوراق)",2)]);
+      rows.push([C("نوع الشحنة",3),C("عدد الشاحنات",3),C("الوزن (كجم)",3)]);
+      groupCargo(allRecords()).forEach(function(gg){ rows.push([gg.name, gg.count, C(gg.weight,5)]); });
+      rows.push([C("الإجمالي",4),C(n,4),C(g,4)]);
+      books.unshift({ name:"الملخّص", rows:rows, widths:[22,14,14,16,18] });
+    }
+    saveAndShare(XLSX_MINI.build(books), "سجل-الباخرة-"+stamp()+".xlsx");
+  });
+  /* ---- الإقلاع ---- */
+  (function init(){
+    $("i_date").value = todayISO();
+    $("i_arrive").value = nowHM();
+    $("i_start").value = nowHM();
+  })();
+})();
+</script>
+</body>
+</html>
