@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1B2A">
+<title>سجل الميناء — بيانات الباخرة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --hull:#0E1B2A; --steel:#1B2E42; --steel-line:#2C4257; --marigold:#F4A81D;
+  --paper:#F2EDE3; --paper-deep:#E4DCCC; --sea:#2F9E7E; --alert:#C63B3B;
+  --ink:#12212F; --ink-soft:#5C6C7A; --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;background:var(--hull);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+.mono{font-family:"IBM Plex Mono","Courier New",monospace;font-variant-numeric:tabular-nums}
+.ltr{direction:ltr;unicode-bidi:isolate;text-align:right}
+.screen{display:none;min-height:100dvh}
+.screen.active{display:block}
+
+/* ===== الدخول ===== */
+#login{display:none;place-items:center;padding:18px 18px 40px;overflow-x:hidden;
+  --bt:#0E1B2A;--bb:#0E1B2A;--gl:#1C3652;
+  background:radial-gradient(120% 70% at 12% -8%,var(--gl) 0,transparent 62%),
+  repeating-linear-gradient(115deg,transparent 0 40px,rgba(255,255,255,.02) 40px 41px),
+  linear-gradient(180deg,var(--bt),var(--bb))}
+#login.active{display:grid}
+.login-card{width:100%;max-width:400px}
+.ship-art{position:relative;margin:0 auto 14px;max-width:360px}
+.stars{position:absolute;left:0;top:-10px;width:100%;height:auto;pointer-events:none}
+.stars circle{animation:tw 3.2s ease-in-out infinite}
+.stars circle:nth-child(3n){animation-delay:.9s}.stars circle:nth-child(3n+1){animation-delay:1.8s}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+.lamp-glow{position:absolute;left:-70px;top:-30px;width:240px;height:240px;border-radius:50%;opacity:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,214,120,.62) 0,rgba(255,214,120,.18) 42%,transparent 68%)}
+.lamp{position:absolute;left:0;top:-14px;width:64px;height:200px;z-index:3;outline:none;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
+.lamp:focus-visible{outline:2px solid var(--marigold);outline-offset:4px;border-radius:10px}
+.lamp svg{display:block;width:100%;height:100%;overflow:visible}
+.hint{text-align:center;color:#9DB2C4;font-size:13.5px;line-height:1.9;margin:0 auto 18px;max-width:300px}
+.hint b{display:block;color:#fff;font-weight:600;font-size:14.5px}
+.login-form{display:none}
+.login-form.active{display:block;animation:cardIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+.login-form.active{padding:18px 16px 6px;border:1px solid rgba(255,214,120,.28);border-radius:16px;
+  background:rgba(8,20,32,.46);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+@media (prefers-reduced-motion:reduce){.stars circle,.login-form.active{animation:none}}
+.ship-art svg{display:block;width:100%;height:auto}
+.brand{text-align:center;margin-bottom:26px}
+.brand h1{font-family:"Reem Kufi",sans-serif;font-size:26px;color:#fff;font-weight:600;letter-spacing:.5px}
+.brand span{display:block;margin-top:5px;font-size:13px;color:#7D93A8}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12.5px;font-weight:500;margin-bottom:7px;color:#9DB2C4}
+.field input{width:100%;padding:14px 15px;border-radius:10px;border:1px solid var(--steel-line);
+  background:rgba(255,255,255,.05);color:#fff;outline:none;transition:.18s}
+.field input:focus-visible{border-color:var(--marigold);background:rgba(244,168,29,.08);box-shadow:0 0 0 3px rgba(244,168,29,.16)}
+.btn{width:100%;padding:15px;border:none;border-radius:10px;cursor:pointer;background:var(--marigold);
+  color:#22160A;font-weight:700;font-size:15.5px;transition:transform .12s,filter .18s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.err{display:none;margin-bottom:14px;padding:11px 14px;border-radius:9px;font-size:13.5px;
+  background:rgba(198,59,59,.14);border:1px solid rgba(198,59,59,.45);color:#FF9F9F}
+.err.show{display:block}
+.pw-row{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;color:#8AA0B4;cursor:pointer}
+.pw-row input{width:auto;accent-color:var(--marigold)}
+
+/* ===== الواجهة ===== */
+#app{background:var(--paper);padding-bottom:46px}
+.topbar{background:var(--hull);padding:14px 16px 16px;position:sticky;top:0;z-index:30;border-bottom:3px solid var(--marigold)}
+.topbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar h1{font-family:"Reem Kufi",sans-serif;color:#fff;font-size:19px;font-weight:600}
+.topbar .sub{color:#8AA0B4;font-size:11.5px;margin-top:3px}
+.logout{background:transparent;border:1px solid var(--steel-line);color:#9DB2C4;padding:8px 12px;border-radius:8px;font-size:12.5px;cursor:pointer}
+.logout:hover{border-color:var(--marigold);color:var(--marigold)}
+.wrap{max-width:600px;margin:0 auto;padding:0 14px}
+
+.block{background:#fff;border:1px solid var(--paper-deep);border-radius:var(--r);margin-top:16px;overflow:hidden}
+.block-head{display:flex;align-items:center;gap:10px;padding:13px 15px;background:#FBF9F5;border-bottom:1px solid var(--paper-deep)}
+.block-head .n{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;flex:none;
+  background:var(--hull);color:#fff;font-size:12px;font-weight:700;font-family:"IBM Plex Mono",monospace}
+.block-head h2{font-family:"Reem Kufi",sans-serif;font-size:15.5px;font-weight:600;flex:1}
+.pin{font-size:10.5px;font-weight:600;color:var(--ink-soft);background:#EFEAE0;padding:3px 8px;border-radius:20px}
+.pin.live{background:#FFF3D9;color:#8A6206}
+.block-body{padding:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{margin-bottom:13px}
+.f:last-child{margin-bottom:0}
+.f label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.f input{width:100%;padding:12px 13px;border:1.5px solid #DDD5C6;border-radius:10px;background:#FBF9F5;outline:none;transition:.16s}
+.f input:focus-visible{border-color:var(--hull);background:#fff;box-shadow:0 0 0 3px rgba(14,27,42,.09)}
+.f input.bad{border-color:var(--alert);background:#FDF3F3}
+.f .msg{display:none;margin-top:5px;font-size:11.5px;color:var(--alert);font-weight:500}
+.f.bad .msg{display:block}
+.unit{position:relative}
+.unit input{padding-left:48px}
+.unit i{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--ink-soft);font-weight:600}
+.shift{display:flex;gap:8px}
+.shift label{flex:1;margin:0;cursor:pointer;position:relative}
+.shift input{position:absolute;opacity:0;pointer-events:none}
+.shift .opt{display:block;text-align:center;padding:12px 6px;border:1.5px solid #DDD5C6;border-radius:10px;
+  background:#FBF9F5;font-size:13.5px;font-weight:600;color:var(--ink-soft);transition:.15s}
+.shift input:checked+.opt{background:var(--hull);border-color:var(--hull);color:#fff}
+.shift input:focus-visible+.opt{box-shadow:0 0 0 3px rgba(244,168,29,.55)}
+.now{background:none;border:none;color:var(--sea);font-size:11.5px;font-weight:600;cursor:pointer;padding:0;float:left}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:12px 15px 0;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;padding:8px 13px;border-radius:20px;border:1.5px solid var(--paper-deep);background:#fff;
+  font-size:12.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--hull);border-color:var(--hull);color:#fff}
+.tab.add{border-style:dashed;color:var(--sea);border-color:#B9DCCF}
+.actions{display:flex;gap:9px;margin-top:14px}
+.btn-dark{flex:1;padding:15px;border:none;border-radius:10px;background:var(--hull);color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.btn-dark:hover{background:var(--steel)}
+.btn-dark:active{transform:translateY(1px)}
+.btn-dark:focus-visible{outline:3px solid var(--marigold);outline-offset:2px}
+.btn-ghost{padding:15px 16px;border:1.5px solid #DDD5C6;background:#fff;border-radius:10px;color:var(--ink-soft);font-weight:600;font-size:13.5px;cursor:pointer}
+
+.totals{display:flex;gap:9px;margin-top:16px}
+.stat{flex:1;background:var(--hull);border-radius:12px;padding:12px 13px;color:#fff}
+.stat b{display:block;font-size:20px;font-weight:600}
+.stat small{color:#8AA0B4;font-size:11px}
+.stat.gold{background:var(--marigold);color:#22160A}
+.stat.gold small{color:#6B4E12}
+.grand{margin-top:9px;background:#fff;border:1.5px dashed var(--marigold);border-radius:12px;
+  padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grand span{font-size:13px;font-weight:600;color:var(--ink-soft)}
+.grand b{font-size:20px;font-weight:600}
+.grand b i{font-style:normal;font-size:12px;color:var(--ink-soft);margin-inline-start:4px}
+
+.slip{position:relative;background:#fff;margin-bottom:11px;padding:15px;border:1px solid var(--paper-deep);border-radius:6px}
+.slip::before{content:"";position:absolute;top:-1px;right:0;left:0;height:6px;
+  background:radial-gradient(circle at 5px 0,transparent 0 4px,#fff 4px);background-size:10px 8px;background-repeat:repeat-x}
+.slip-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:11px}
+.serial{font-size:10.5px;color:var(--ink-soft);letter-spacing:1px;font-weight:600}
+.plate{display:inline-block;margin-top:5px;padding:5px 11px;border:2px solid var(--ink);border-radius:5px;font-size:16px;font-weight:600;letter-spacing:1px}
+.stamp{border:2px solid var(--marigold);color:#9A6907;border-radius:5px;padding:6px 10px;text-align:center;transform:rotate(-3deg);background:#FFF9EC;flex:none}
+.stamp b{display:block;font-size:16px;font-weight:600}
+.stamp small{font-size:9px;letter-spacing:1px;color:#B08326}
+.slip-rows{border-top:1px dashed #D9D0BF;padding-top:10px;display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;gap:12px;font-size:13px}
+.row span{color:var(--ink-soft)}
+.row b{font-weight:500}
+.del{margin-top:10px;background:none;border:none;color:var(--alert);font-size:12px;font-weight:600;cursor:pointer;padding:3px 0}
+.empty{border:1.5px dashed #D3C9B6;border-radius:var(--r);padding:30px 20px;text-align:center}
+.empty b{display:block;font-family:"Reem Kufi",sans-serif;font-size:15.5px;margin-bottom:5px}
+.empty p{font-size:13px;color:var(--ink-soft);line-height:1.8}
+.exports{display:flex;gap:9px;margin-top:16px}
+.export{flex:1;padding:15px 8px;border:none;border-radius:10px;cursor:pointer;background:var(--sea);color:#fff;font-weight:600;font-size:14.5px}
+.export.alt{background:var(--hull)}
+.export:disabled{background:#C9C1B2;cursor:not-allowed}
+.sheet-del{margin-right:auto;background:none;border:1px solid #E3C9C9;color:var(--alert);
+  font-size:11.5px;font-weight:700;padding:4px 11px;border-radius:20px;cursor:pointer;font-family:inherit}
+.pin.edit-badge{background:#FFF3D9;color:#8A6206}
+.slip.editing{border-color:var(--marigold);box-shadow:0 0 0 2px #F9E0AC}
+.slip-acts{margin-top:10px;display:flex;gap:14px;align-items:center}
+.edt{background:none;border:none;color:var(--hull);font-size:12px;font-weight:700;cursor:pointer;padding:3px 0;font-family:inherit}
+.btn-danger{background:var(--alert);color:#fff;border:none;border-radius:8px;padding:12px 18px;
+  font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(14,27,42,.55);display:none;align-items:center;
+  justify-content:center;padding:24px;z-index:60}
+.modal.on{display:flex}
+.modal-card{background:#fff;border-radius:14px;padding:22px;max-width:340px;width:100%;
+  box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.modal-card h3{font-family:"Reem Kufi",sans-serif;font-size:18px;color:var(--hull);margin-bottom:8px}
+.modal-card p{font-size:13.5px;color:var(--ink-soft);line-height:1.8;margin-bottom:18px}
+.modal-acts{display:flex;gap:10px}
+.modal-acts button{flex:1}
+.f select,.f textarea{width:100%;padding:12px 13px;border:1.5px solid #DDD5C6;border-radius:10px;background:#FBF9F5;
+  outline:none;font-family:inherit;font-size:15px;color:var(--ink);transition:.16s}
+.f textarea{resize:vertical;line-height:1.7}
+.f select:focus-visible,.f textarea:focus-visible{border-color:var(--hull);background:#fff;box-shadow:0 0 0 3px rgba(14,27,42,.09)}
+.f select.bad{border-color:var(--alert);background:#FDF3F3}
+.selrow{display:flex;gap:8px}
+.selrow select{flex:1}
+.seldel{flex:none;width:44px;border:1.5px solid #DDD5C6;border-radius:10px;background:#fff;color:#8A7F6C;font-size:15px;cursor:pointer}
+.seldel:active{background:var(--alert);color:#fff;border-color:var(--alert)}
+.tblwrap{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;font-size:13px}
+table.rt th{background:#FBF8F1;color:var(--ink-soft);font-weight:600;font-size:11.5px;padding:9px 8px;text-align:center;border-bottom:1.5px solid #EFE9DC;white-space:nowrap}
+table.rt td{padding:10px 8px;text-align:center;border-bottom:1px dashed #E8E1D3;white-space:nowrap}
+table.rt tr:last-child td{border-bottom:none}
+table.rt .racts{white-space:nowrap}
+table.rt .racts button{border:none;background:#EFEADE;color:var(--hull);width:30px;height:30px;border-radius:8px;font-size:14px;cursor:pointer;margin:0 2px}
+table.rt .racts .del{background:#F8E3E3;color:var(--alert)}
+#admin{background:var(--paper);padding-bottom:46px}
+.menu-btn{width:42px;height:42px;border-radius:10px;border:1px solid var(--steel-line);background:transparent;color:#fff;font-size:20px;cursor:pointer}
+.menu-btn:active{background:var(--steel)}
+.adshell{position:relative;max-width:1000px;margin:0 auto;padding:0 14px}
+.ad-ov{display:none;position:fixed;inset:0;background:rgba(14,27,42,.5);z-index:55}
+.ad-ov.on{display:block}
+.adside{position:fixed;top:0;bottom:0;right:0;left:auto;width:74%;max-width:280px;z-index:60;background:var(--hull);
+  padding:84px 14px 20px;border-left:3px solid var(--marigold);transform:translateX(100%);transition:transform .28s ease;overflow-y:auto}
+.adside.open{transform:none}
+.adside button{display:block;width:100%;text-align:right;padding:13px 14px;border:none;background:transparent;color:#C9D6E2;
+  border-radius:10px;font-family:inherit;font-size:14.5px;font-weight:600;margin-bottom:6px;cursor:pointer}
+.adside button.on{background:var(--marigold);color:#22160A}
+.adside button.sub{padding-right:30px}
+.adside .glb{color:#7D93A8;font-size:11.5px;font-weight:600;margin:16px 8px 6px}
+@media (min-width:900px){
+  .adshell{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:start;padding-top:6px}
+  .adside{position:sticky;top:92px;transform:none;width:auto;max-width:none;padding:14px;border-left:none;border-radius:14px;z-index:1}
+  .ad-ov{display:none!important}.menu-btn{display:none}
+}
+.shipcard{display:block;width:100%;text-align:right;background:#fff;border:1.5px solid #E0D8C7;border-radius:var(--r);
+  padding:14px 15px;margin-bottom:10px;cursor:pointer;font-family:inherit}
+.shipcard:active{border-color:var(--marigold)}
+.shipcard .sn{display:block;font-family:"Reem Kufi",sans-serif;font-size:16.5px;color:var(--hull);font-weight:600}
+.shipcard .sc{display:block;font-size:12px;color:var(--ink-soft);margin:3px 0 9px}
+.shipcard .sx{display:flex;gap:8px;flex-wrap:wrap}
+.shipcard .sx i{font-style:normal;font-size:12px;font-weight:600;background:#F2EDE3;border-radius:20px;padding:4px 10px;color:var(--ink)}
+.backbtn{border:none;background:none;color:var(--sea);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;margin:14px 0 4px;padding:6px 2px}
+.shiphead{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;margin:6px 0 4px}
+.shiphead .sn{font-family:"Reem Kufi",sans-serif;font-size:19px;color:var(--hull);font-weight:600}
+.shiphead .sc{font-size:12px;color:var(--ink-soft)}
+.shiphead select{padding:10px 12px;border:1.5px solid #DCD3C2;border-radius:10px;background:#fff;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--hull);max-width:48%}
+.adbar select{min-width:0}
+.filters{display:flex;gap:8px;margin:6px 0 4px}
+.filters select{flex:1;min-width:0;padding:10px 12px;border:1.5px solid #DCD3C2;border-radius:10px;background:#fff;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--hull)}
+.linkbtn{border:none;background:none;color:var(--sea);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;padding:2px}
+.chipsrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chipsrow i{font-style:normal;font-size:12px;font-weight:600;background:#EAF5F1;color:#1F6E58;border-radius:20px;padding:5px 11px}
+.helmwrap{background:linear-gradient(180deg,#12212F,#0B1722);border-radius:18px;padding:14px 12px 16px;margin:8px 0 14px;color:#fff;border:1px solid #1B2E42}
+.helmtitle{font-family:"Reem Kufi",sans-serif;font-size:15px;text-align:center;color:#F4A81D;margin-bottom:6px}
+.helm{display:block;width:100%;max-width:290px;margin:0 auto;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.helm #helmRot{transform-origin:130px 130px;transition:transform .45s cubic-bezier(.2,.9,.25,1.12)}
+.helm.drag{cursor:grabbing}.helm.drag #helmRot{transition:none}
+.helm .hh{cursor:pointer}
+.helm .hh circle:first-child{fill:#D9A441;stroke:#7A4A0C;stroke-width:2;transition:fill .2s}
+.helm .hh.sel circle:first-child{fill:#F4A81D;stroke:#fff;stroke-width:2.5}
+.helmhint{text-align:center;font-size:11.5px;color:#7D93A8;margin:4px 0 10px}
+.helmchips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.hchip{border:1px solid #2C4257;background:transparent;color:#C9D6E2;border-radius:20px;padding:6px 11px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.hchip.on{background:var(--marigold);color:#22160A;border-color:var(--marigold)}
+#helmDetail{margin-top:12px;background:rgba(255,255,255,.07);border-radius:12px;padding:12px 14px}
+.hd-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.hd-t{font-size:13.5px;color:#C9D6E2;font-weight:600}
+.hd-v{font-size:22px;font-weight:700;color:#fff}.hd-v i{font-style:normal;font-size:12px;color:#9DB2C4;font-weight:500}
+.hd-n{font-size:12px;color:#9DB2C4;margin-top:6px;line-height:1.7}
+.hd-bar{height:9px;border-radius:6px;background:#1B2E42;margin-top:10px;overflow:hidden}
+.hd-bar i{display:block;height:100%;background:linear-gradient(90deg,#2F9E7E,#F4A81D);border-radius:6px;transition:width .4s}
+.hd-bar.warn i{background:#C63B3B}
+.hd-row{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:7px 0;border-bottom:1px dashed #2C4257}
+.hd-row:last-child{border-bottom:none}.hd-row b{color:#F4A81D;font-weight:600;white-space:nowrap}
+.adbar{display:flex;gap:8px;margin-top:16px}
+.adbar select{flex:1;padding:12px 14px;border:1.5px solid #DCD3C2;border-radius:10px;background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--hull)}
+.adref{border:none;background:var(--hull);color:#fff;border-radius:10px;padding:11px 18px;min-height:44px;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer}
+.adinfo{padding:13px 15px;display:grid;gap:10px}
+.adinfo label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
+.adinfo input{width:100%;padding:10px 12px;border:1.5px solid #DDD5C6;border-radius:9px;background:#FBF9F5;font-family:inherit;font-size:14px;outline:none}
+.adnote{padding:12px 15px;border-top:1px dashed #E8E1D3;font-size:13px;line-height:1.8;color:var(--ink-soft)}
+.adnote b{color:var(--ink)}
+.adsub{font-size:12px;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
+.doorbtn{display:block;width:100%;border:none;background:transparent;padding:4px 0 0;margin-top:6px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.doorbtn svg{display:block;width:100%;max-height:116px;height:auto;overflow:visible}
+.doorbtn:focus-visible{outline:3px solid var(--marigold);outline-offset:3px;border-radius:12px}
+.doorbtn #doorPanel{transform-origin:99px 54px;transition:transform .42s cubic-bezier(.3,.7,.3,1)}
+.doorbtn #doorLight{transition:opacity .4s}
+.doorbtn:hover #doorPanel{transform:scaleX(.95)}
+.doorbtn #person{opacity:0;transform:translateX(26px);transition:transform .7s linear,opacity .25s}
+.doorbtn #bubble{opacity:0;transition:opacity .2s}
+.doorbtn[data-st="walk"] #person{opacity:1;transform:translateX(72px)}
+.doorbtn[data-st="open"] #person{opacity:1;transform:translateX(72px)}
+.doorbtn[data-st="open"] #doorPanel{transform:scaleX(.16)}
+.doorbtn[data-st="open"] #doorLight{opacity:1}
+.doorbtn[data-st="enter"] #doorPanel{transform:scaleX(.16)}
+.doorbtn[data-st="enter"] #doorLight{opacity:1}
+.doorbtn[data-st="enter"] #person{opacity:0;transform:translateX(112px) scale(.55);transition:transform .62s ease-in,opacity .62s ease-in}
+.doorbtn[data-st="fail"] #person,.doorbtn[data-st="leave"] #person{opacity:1;transform:translateX(72px)}
+.doorbtn[data-st="fail"] #doorPanel{animation:rattle .5s linear 1}
+.doorbtn[data-st="fail"] #bubble{opacity:1}
+.doorbtn[data-st="leave"] #person{opacity:0;transform:translateX(26px);transition:transform .6s linear,opacity .6s}
+@keyframes rattle{0%,100%{transform:translateX(0)}15%{transform:translateX(-2.5px)}30%{transform:translateX(2.5px)}45%{transform:translateX(-2.5px)}60%{transform:translateX(2px)}75%{transform:translateX(-1.5px)}}
+@media (prefers-reduced-motion:reduce){.doorbtn *{transition:none!important;animation:none!important}}
+.fhint{font-size:11.5px;color:var(--ink-soft);margin:6px 2px 0}
+.xlbtn{flex:none;border:none;background:var(--sea);color:#fff;border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.xlbtn:active{filter:brightness(.9)}
+.cargo-row.rem{background:#EAF5F1}
+.ed-grid{display:grid;gap:10px;margin-bottom:16px}
+.ed-grid label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-soft);margin-bottom:4px}
+.ed-grid input{width:100%;padding:10px 12px;border:1.5px solid #DDD5C6;border-radius:9px;background:#FBF9F5;font-family:inherit;font-size:14px;outline:none}
+.modal-card.wide{max-width:380px;max-height:90dvh;overflow-y:auto}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:-6px 0 16px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#EFEADE;border:1px solid #DFD6C4;
+  border-radius:20px;padding:5px 6px 5px 5px;font-size:12.5px;font-weight:600;color:var(--hull)}
+.chip .u{background:none;border:none;font:inherit;color:inherit;cursor:pointer;padding:1px 4px}
+.chip .x{background:#DCD2BE;border:none;color:#6B6152;width:18px;height:18px;border-radius:50%;
+  font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;font-family:inherit}
+.chip .x:active{background:var(--alert);color:#fff}
+.pickbar{display:none;margin:0 0 14px}
+.pickbar.on{display:block}
+.pickbar select{width:100%;padding:12px 14px;border:1.5px solid #DCD3C2;border-radius:10px;
+  background:#fff;font-family:inherit;font-size:14px;font-weight:600;color:var(--hull);
+  appearance:none;background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E1B2A' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 14px center;background-size:16px}
+.viewbar{display:flex;gap:8px;margin:18px 0 12px;background:#E7E0D2;padding:4px;border-radius:11px}
+.viewbar button{flex:1;border:none;background:none;padding:10px 6px;border-radius:8px;font-family:inherit;
+  font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer}
+.viewbar button.on{background:#fff;color:var(--hull);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.cargo-box{border:1.5px solid #E0D8C7;border-radius:var(--r);background:#fff;overflow:hidden;margin-bottom:16px}
+.cargo-box h3{font-family:"Reem Kufi",sans-serif;font-size:14.5px;color:var(--hull);
+  padding:13px 15px;border-bottom:1.5px solid #EFE9DC;background:#FBF8F1}
+.cargo-row{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px dashed #E8E1D3}
+.cargo-row:last-child{border-bottom:none}
+.cargo-row .nm{flex:1;font-size:14px;font-weight:600}
+.cargo-row .qt{background:#EAF5F1;color:#1F6E58;font-size:11.5px;font-weight:700;
+  padding:4px 9px;border-radius:20px;white-space:nowrap}
+.cargo-row .wt{font-size:14.5px;font-weight:700;color:#9A6907;white-space:nowrap}
+.cargo-row.sum{background:#FFF9EC;border-top:1.5px solid #F0E2C4}
+.grp{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.grp:first-child{margin-top:4px}
+.grp .t{font-family:"Reem Kufi",sans-serif;font-size:14.5px;color:var(--hull)}
+.grp .l{flex:1;height:1px;background:#DCD3C2}
+.grp .v{font-size:11.5px;font-weight:700;color:var(--ink-soft)}
+.note{margin-top:12px;font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.8}
+.toast{position:fixed;bottom:18px;right:14px;left:14px;max-width:560px;margin:0 auto;background:var(--hull);color:#fff;
+  padding:13px 15px;border-radius:11px;font-size:13.5px;border-inline-start:4px solid var(--marigold);
+  transform:translateY(150%);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .2s;z-index:70}
+.toast.show{transform:translateY(0);opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== تسجيل الدخول ===== -->
+<section id="login" class="screen active">
+  <div class="login-card">
+    <div class="ship-art" id="stage">
+      <svg class="stars" id="stars" viewBox="0 0 360 120" aria-hidden="true">
+        <g fill="#FFFFFF">
+          <circle cx="40" cy="20" r="1.4"/><circle cx="96" cy="10" r="1"/><circle cx="130" cy="34" r="1.5"/>
+          <circle cx="176" cy="14" r="1.1"/><circle cx="214" cy="30" r="1.3"/><circle cx="250" cy="9" r="1"/>
+          <circle cx="332" cy="22" r="1.4"/><circle cx="310" cy="64" r="1"/><circle cx="68" cy="58" r="1.2"/>
+          <circle cx="156" cy="62" r="1"/><circle cx="352" cy="50" r="1.1"/><circle cx="22" cy="86" r="1"/>
+        </g>
+      </svg>
+      <div class="lamp-glow" id="lampGlow"></div>
+      <div class="lamp" id="lamp" role="switch" aria-checked="false" tabindex="0" aria-label="أشعل مصباح الرصيف للوصول إلى لوحة السفينة">
+        <svg viewBox="0 0 64 200" aria-hidden="true">
+          <rect x="0" y="12" width="64" height="7" rx="3.5" fill="#2C4257"/>
+          <line x1="32" y1="19" x2="32" y2="38" stroke="#4A6178" stroke-width="2.5"/>
+          <path d="M18 52 L32 36 L46 52 Z" fill="#1B2E42"/>
+          <rect x="19" y="50" width="26" height="34" rx="4" fill="#12212F" stroke="#4A6178" stroke-width="2"/>
+          <rect x="23" y="55" width="18" height="24" rx="3" id="lampGlass" fill="#2C4257"/>
+          <rect x="17" y="82" width="30" height="6" rx="3" fill="#1B2E42"/>
+          <line id="ropeCord" x1="32" y1="88" x2="32" y2="146" stroke="#D2BD8E" stroke-width="3" stroke-dasharray="5 2.5" stroke-linecap="round"/>
+          <g id="ropeHandle">
+            <circle cx="32" cy="152" r="22" fill="transparent"/>
+            <rect x="26" y="146" width="12" height="20" rx="6" fill="#F4A81D" stroke="#B87A0B" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+      <svg viewBox="0 0 360 210" role="img" aria-label="باخرة حاويات">
+        <rect width="360" height="210" fill="none"/>
+        <circle id="moonHalo" cx="292" cy="42" r="26" fill="#9DB2C4" opacity=".18"/>
+        <circle id="moon" cx="292" cy="42" r="15" fill="#C9D6E2"/>
+        <!-- الحاويات -->
+        <g>
+          <rect x="76"  y="104" width="46" height="26" rx="2" fill="#C63B3B"/>
+          <rect x="126" y="104" width="46" height="26" rx="2" fill="#2F9E7E"/>
+          <rect x="176" y="104" width="46" height="26" rx="2" fill="#F4A81D"/>
+          <rect x="101" y="76"  width="46" height="26" rx="2" fill="#2F9E7E"/>
+          <rect x="151" y="76"  width="46" height="26" rx="2" fill="#C63B3B"/>
+          <rect x="126" y="48"  width="46" height="26" rx="2" fill="#F4A81D"/>
+          <g fill="rgba(0,0,0,.18)">
+            <rect x="76" y="126" width="146" height="4"/><rect x="101" y="98" width="96" height="4"/><rect x="126" y="70" width="46" height="4"/>
+          </g>
+        </g>
+        <!-- برج القيادة -->
+        <rect x="234" y="72" width="52" height="58" rx="3" fill="#20364C"/>
+        <rect x="244" y="84"  width="12" height="12" rx="1" fill="#F4A81D"/>
+        <rect x="264" y="84"  width="12" height="12" rx="1" fill="#F4A81D" opacity=".5"/>
+        <rect x="244" y="104" width="12" height="12" rx="1" fill="#F4A81D" opacity=".5"/>
+        <rect x="264" y="104" width="12" height="12" rx="1" fill="#F4A81D"/>
+        <rect x="248" y="46" width="20" height="28" rx="3" fill="#16293D"/>
+        <rect x="248" y="46" width="20" height="8"  rx="3" fill="#C63B3B"/>
+        <!-- البدن -->
+        <path d="M40 130h266l-26 42H66z" fill="#12283C"/>
+        <path d="M40 130h266l-5 9H45z" fill="#F4A81D"/>
+        <g fill="#0B1622" opacity=".5">
+          <circle cx="96" cy="150" r="5"/><circle cx="128" cy="150" r="5"/><circle cx="160" cy="150" r="5"/>
+          <circle cx="192" cy="150" r="5"/><circle cx="224" cy="150" r="5"/><circle cx="256" cy="150" r="5"/>
+        </g>
+        <!-- الماء -->
+        <g stroke="#2C4257" stroke-width="4" stroke-linecap="round">
+          <path d="M22 184h64M104 184h84M206 184h60M284 184h54"/>
+          <path d="M56 198h86M162 198h72M254 198h64" opacity=".6"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="brand">
+      <h1>سجل الميناء</h1>
+      <span>تسجيل الشاحنات وأوزان التفريغ</span>
+    </div>
+
+    <p class="hint" id="hint"><b>اسحب حبل الكشاف لإنارة المرفأ وتسجيل الدخول</b>أشعل مصباح الرصيف للوصول إلى لوحة السفينة</p>
+
+    <div class="login-form" id="loginForm">
+    <div class="err" id="loginErr"></div>
+    <div class="field">
+      <label for="u">اسم المستخدم</label>
+      <input id="u" type="text" dir="ltr" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="p">كلمة المرور</label>
+      <input id="p" type="password" dir="ltr" autocomplete="current-password">
+      <label class="pw-row"><input type="checkbox" id="showPw"> إظهار كلمة المرور</label>
+    </div>
+    <button class="doorbtn" id="loginBtn" type="button" aria-label="دخول">
+      <svg viewBox="0 0 240 100" aria-hidden="true">
+        <line x1="14" y1="92" x2="226" y2="92" stroke="#2C4257" stroke-width="3" stroke-linecap="round"/>
+        <rect x="94" y="10" width="52" height="82" rx="3" fill="#0B1722" stroke="#F4A81D" stroke-width="3.5"/>
+        <rect id="doorLight" x="99" y="15" width="42" height="77" fill="#FFE2A0" opacity="0"/>
+        <g id="doorPanel">
+          <rect x="99" y="15" width="42" height="77" fill="#B8741A" stroke="#7A4A0C" stroke-width="1.5"/>
+          <rect x="104" y="21" width="14" height="28" rx="1.5" fill="none" stroke="#7A4A0C" stroke-width="1.3"/>
+          <rect x="122" y="21" width="14" height="28" rx="1.5" fill="none" stroke="#7A4A0C" stroke-width="1.3"/>
+          <rect x="104" y="55" width="14" height="30" rx="1.5" fill="none" stroke="#7A4A0C" stroke-width="1.3"/>
+          <rect x="122" y="55" width="14" height="30" rx="1.5" fill="none" stroke="#7A4A0C" stroke-width="1.3"/>
+          <circle cx="135" cy="55" r="3.2" fill="#FFD36E" stroke="#8A5A0B" stroke-width="1"/>
+        </g>
+        <g id="person">
+          <g transform="translate(0,92)">
+            <line x1="-3" y1="-25" x2="-4.5" y2="-1" stroke="#1B2E42" stroke-width="4" stroke-linecap="round"/>
+            <line x1="3" y1="-25" x2="4.5" y2="-1" stroke="#1B2E42" stroke-width="4" stroke-linecap="round"/>
+            <rect x="-7" y="-50" width="14" height="27" rx="5" fill="#2F9E7E"/>
+            <line x1="-7" y1="-46" x2="-11" y2="-32" stroke="#2F9E7E" stroke-width="4" stroke-linecap="round"/>
+            <line x1="7" y1="-46" x2="11" y2="-32" stroke="#2F9E7E" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="0" cy="-58" r="6.5" fill="#F2D3B0"/>
+            <path d="M-7.5 -59 a7.5 7.5 0 0 1 15 0 z" fill="#F4A81D"/>
+          </g>
+        </g>
+        <g id="bubble"><circle cx="80" cy="13" r="9" fill="#C63B3B"/><text x="80" y="18" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">!</text></g>
+      </svg>
+    </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== الواجهة الرئيسية ===== -->
+<section id="app" class="screen">
+  <header class="topbar">
+    <div class="wrap topbar-row">
+      <div>
+        <h1>كتابة بيانات الباخرة</h1>
+        <div class="sub" id="opName">المستخدم: —</div>
+      </div>
+      <button class="logout" id="logoutBtn">خروج</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- 1) الباخرة -->
+    <section class="block">
+      <div class="block-head"><div class="n">١</div><h2>بيانات الباخرة</h2></div>
+      <div class="block-body">
+        <div class="f" id="f_ship"><label for="i_ship">اسم الباخرة</label><input id="i_ship" type="text" placeholder="اسم الباخرة"><div class="msg"></div></div>
+        <div class="f" id="f_company"><label for="i_company">الشركة</label><input id="i_company" type="text" placeholder="الشركة المالكة أو الوكيل"><div class="msg"></div></div>
+        <div class="f" id="f_date"><label for="i_date">التاريخ</label><input id="i_date" type="date"><div class="msg"></div></div>
+        <div class="f" id="f_shipw"><label for="i_shipw">وزن الباخرة الإجمالي</label>
+          <div class="unit"><input id="i_shipw" type="text" inputmode="decimal" pattern="[0-9.]*" class="mono ltr" placeholder="0"><i>كجم</i></div><div class="msg"></div></div>
+      </div>
+    </section>
+
+    <!-- 2) الموظف والدوام -->
+    <section class="block">
+      <div class="block-head"><div class="n">٢</div><h2>الموظف والدوام</h2><button class="sheet-del" id="delSheetBtn">حذف الورقة</button></div>
+      <div class="tabs" id="tabs"></div>
+      <div class="block-body">
+        <div class="f" id="f_staff"><label for="i_staff">اسم الموظف</label>
+          <input id="i_staff" type="text" placeholder="اسم الموظف المسؤول"><div class="msg"></div></div>
+        <div class="f"><label>فترة الدوام</label>
+          <div class="shift">
+            <label><input type="radio" name="shift" value="صباحي" checked><span class="opt">صباحي</span></label>
+            <label><input type="radio" name="shift" value="مسائي"><span class="opt">مسائي</span></label>
+          </div>
+        </div>
+        <div class="f"><label for="i_start">وقت بدء الدوام<button class="now" data-now="i_start">الآن</button></label>
+          <input id="i_start" type="time"><div class="msg"></div></div>
+        <div class="f" style="margin-bottom:0"><label for="i_end">وقت انتهاء الدوام<button class="now" data-now="i_end">الآن</button></label>
+          <input id="i_end" type="time"><p class="fhint">يسجّله الموظف بعد انتهاء دوامه.</p></div>
+      </div>
+    </section>
+
+    <!-- 3) الشاحنة -->
+    <section class="block">
+      <div class="block-head"><div class="n">٣</div><h2>معلومات الشاحنة</h2><span class="pin edit-badge" id="editBadge" style="display:none">وضع التعديل</span></div>
+      <div class="block-body">
+        <div class="f" id="f_plate"><label for="i_plate">رقم السيارة</label>
+          <input id="i_plate" type="tel" inputmode="numeric" pattern="[0-9]*" class="mono ltr" placeholder="0000"><div class="msg"></div></div>
+        <div class="f" id="f_cargo"><label for="i_cargo_sel">نوع الشحنة</label>
+          <div class="selrow"><select id="i_cargo_sel"></select>
+            <button type="button" class="seldel" id="cargoDel" aria-label="حذف النوع المحدد من القائمة" style="display:none">✕</button></div>
+          <input id="i_cargo" type="text" placeholder="اكتب النوع الجديد: صويا، ذرة…" style="display:none;margin-top:8px"><div class="msg"></div></div>
+        <div class="f" id="f_driver"><label for="i_driver">اسم السائق</label>
+          <input id="i_driver" type="text" placeholder="اسم السائق"><div class="msg"></div></div>
+        <div class="grid2">
+          <div class="f" id="f_arrive"><label for="i_arrive">موعد وصول السائق<button class="now" data-now="i_arrive">الآن</button></label>
+            <input id="i_arrive" type="time" class="mono"><div class="msg"></div></div>
+          <div class="f" id="f_weight"><label for="i_weight">وزن السيارة</label>
+            <div class="unit"><input id="i_weight" type="text" inputmode="decimal" pattern="[0-9.]*" class="mono ltr" placeholder="0"><i>كجم</i></div>
+            <div class="msg"></div></div>
+        </div>
+        <div class="actions">
+          <button class="btn-dark" id="saveBtn">إضافة الشاحنة</button>
+          <button class="btn-ghost" id="clearBtn">تفريغ</button>
+          <button class="btn-ghost" id="cancelEditBtn" style="display:none">إلغاء</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="totals">
+      <div class="stat"><b class="mono" id="cnt">0</b><small>شاحنات هذه الورقة</small></div>
+      <div class="stat gold" id="statW"><b class="mono" id="tot">0</b><small>وزن هذه الورقة (كجم)</small></div>
+    </div>
+    <div class="grand" id="grandBox"><span>إجمالي جميع الأوزان</span><b class="mono" id="grand">0<i>كجم</i></b></div>
+
+    <div class="viewbar" id="viewbar">
+      <button data-view="cargo" class="on">جدول لكل نوع</button>
+      <button data-view="new">حسب الأحدث</button>
+      <button data-view="sum">ملخّص الأنواع</button>
+    </div>
+
+    <div class="pickbar" id="pickbar"><select id="cargoPick"></select></div>
+
+    <div id="list"></div>
+
+    <section class="block" id="notesBlock" style="display:none">
+      <div class="block-head"><div class="n">٤</div><h2>ملاحظات</h2></div>
+      <div class="block-body"><div class="f" style="margin-bottom:0">
+        <textarea id="i_notes" rows="4" placeholder="اكتب ملاحظاتك هنا…"></textarea></div></div>
+    </section>
+
+    <p class="note" id="note"></p>
+  </div>
+</section>
+
+<!-- ===== لوحة المدير ===== -->
+<section id="admin" class="screen">
+  <header class="topbar">
+    <div class="wrap topbar-row">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="menu-btn" id="adMenuBtn" aria-label="القائمة الجانبية">☰</button>
+        <div><h1>لوحة المدير</h1><div class="sub">المستخدم: Admin</div></div>
+      </div>
+      <button class="logout" id="adLogout">خروج</button>
+    </div>
+  </header>
+  <div class="adshell">
+    <div class="ad-ov" id="adOv"></div>
+    <aside class="adside" id="adSide" aria-label="أقسام لوحة المدير">
+      <button data-sec="dock" class="on">الرصيف</button>
+      <button data-sec="wh">المستودع</button>
+      <div class="glb">التقارير</div>
+      <button data-sec="ships" class="sub">البواخر</button>
+      <button data-sec="staff" class="sub">الموظفون</button>
+    </aside>
+    <main class="admain">
+      <div class="adbar"><select id="adDate" aria-label="التاريخ"></select><select id="adStaff" aria-label="الموظف"></select><button class="adref" id="adRefresh">تحديث</button></div>
+      <div id="adBody"></div>
+    </main>
+  </div>
+</section>
+
+<div class="modal" id="edModal">
+  <div class="modal-card wide">
+    <h3>تعديل بيانات الشاحنة</h3>
+    <div class="ed-grid">
+      <div><label for="ed_plate">رقم السيارة</label><input id="ed_plate" type="tel" inputmode="numeric" class="mono ltr"></div>
+      <div><label for="ed_cargo">نوع الشحنة</label><input id="ed_cargo" type="text" list="ed_types"><datalist id="ed_types"></datalist></div>
+      <div><label for="ed_driver">اسم السائق</label><input id="ed_driver" type="text"></div>
+      <div><label for="ed_arrive">الوقت</label><input id="ed_arrive" type="time"></div>
+      <div id="ed_wrap_w"><label for="ed_weight">الوزن (كجم)</label><input id="ed_weight" type="text" inputmode="decimal" class="mono ltr"></div>
+      <div><label for="ed_date">التاريخ</label><input id="ed_date" type="date"></div>
+    </div>
+    <div class="modal-acts"><button class="btn-ghost" id="edNo">إلغاء</button><button class="btn-dark" id="edYes">حفظ</button></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h3 id="mTitle">تأكيد</h3>
+    <p id="mText"></p>
+    <div class="modal-acts">
+      <button class="btn-ghost" id="mNo">إلغاء</button>
+      <button class="btn-danger" id="mYes">حذف</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== مولّد ملفات إكسل (xlsx) بعدة أوراق — بدون مكتبات خارجية ===== */
+var XLSX_MINI = (function(){
+  var enc = new TextEncoder(), TBL = null;
+  function table(){
+    if(TBL) return TBL;
+    TBL = new Uint32Array(256);
+    for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; TBL[n]=c>>>0; }
+    return TBL;
+  }
+  function crc32(buf){
+    var t=table(), c=0xFFFFFFFF;
+    for(var i=0;i<buf.length;i++) c = t[(c ^ buf[i]) & 0xFF] ^ (c>>>8);
+    return (c ^ 0xFFFFFFFF)>>>0;
+  }
+  function zip(files){
+    var parts=[], central=[], offset=0;
+    files.forEach(function(f){
+      var name=enc.encode(f.name), data=f.data, crc=crc32(data);
+      var lh=new Uint8Array(30+name.length), dv=new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true); dv.setUint16(4,20,true); dv.setUint16(6,0x0800,true);
+      dv.setUint32(14,crc,true); dv.setUint32(18,data.length,true); dv.setUint32(22,data.length,true);
+      dv.setUint16(26,name.length,true); lh.set(name,30);
+      parts.push(lh,data);
+      var ch=new Uint8Array(46+name.length), cv=new DataView(ch.buffer);
+      cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true); cv.setUint16(6,20,true); cv.setUint16(8,0x0800,true);
+      cv.setUint32(16,crc,true); cv.setUint32(20,data.length,true); cv.setUint32(24,data.length,true);
+      cv.setUint16(28,name.length,true); cv.setUint32(42,offset,true); ch.set(name,46);
+      central.push(ch);
+      offset += lh.length + data.length;
+    });
+    var cdSize=0; central.forEach(function(c){ cdSize += c.length; });
+    var end=new Uint8Array(22), ev=new DataView(end.buffer);
+    ev.setUint32(0,0x06054b50,true); ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
+    ev.setUint32(12,cdSize,true); ev.setUint32(16,offset,true);
+    var all=parts.concat(central,[end]), total=0;
+    all.forEach(function(a){ total += a.length; });
+    var out=new Uint8Array(total), p=0;
+    all.forEach(function(a){ out.set(a,p); p += a.length; });
+    return out;
+  }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function colName(n){ var s=""; while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26);} return s; }
+  function safeName(s,used){
+    var n = String(s||"ورقة").replace(/[\\\/\?\*\[\]:]/g," ").slice(0,28).trim() || "ورقة";
+    var b=n, i=2; while(used.indexOf(n)>-1){ n = (b+" "+i).slice(0,31); i++; }
+    used.push(n); return n;
+  }
+  /* أنماط الخلايا: 0 عادي، 1 عنوان رئيسي، 2 تسمية، 3 رأس جدول، 4 إجمالي، 5 رقم */
+  var STYLES = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts>'+
+    '<fonts count="5">'+
+    '<font><sz val="11"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="15"/><color rgb="FF0E1B2A"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="11"/><color rgb="FF12212F"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'+
+    '<font><b/><sz val="12"/><color rgb="FF22160A"/><name val="Calibri"/></font></fonts>'+
+    '<fills count="5">'+
+    '<fill><patternFill patternType="none"/></fill>'+
+    '<fill><patternFill patternType="gray125"/></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FF0E1B2A"/><bgColor indexed="64"/></patternFill></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF2EDE3"/><bgColor indexed="64"/></patternFill></fill>'+
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFF4A81D"/><bgColor indexed="64"/></patternFill></fill></fills>'+
+    '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+
+    '<border><left style="thin"><color rgb="FFBFB6A5"/></left><right style="thin"><color rgb="FFBFB6A5"/></right>'+
+    '<top style="thin"><color rgb="FFBFB6A5"/></top><bottom style="thin"><color rgb="FFBFB6A5"/></bottom><diagonal/></border></borders>'+
+    '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
+    '<cellXfs count="6">'+
+    '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '<xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '<xf numFmtId="164" fontId="4" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" horizontal="center" wrapText="1"/></xf>'+
+    '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+  function sheetXml(sh){
+    var rows = sh.rows || [], widths = sh.widths || [], maxc = 1;
+    var body = rows.map(function(row,ri){
+      if(!row || !row.length) return '<row r="'+(ri+1)+'"/>';
+      maxc = Math.max(maxc, row.length);
+      var cells = row.map(function(cell,ci){
+        var v = (cell && typeof cell === "object") ? cell.v : cell;
+        var s = (cell && typeof cell === "object" && cell.s != null) ? cell.s : 0;
+        if(v === "" || v == null) return '<c r="'+colName(ci+1)+(ri+1)+'" s="'+s+'"/>';
+        var ref = colName(ci+1)+(ri+1);
+        if(typeof v === "number" && isFinite(v)) return '<c r="'+ref+'" s="'+s+'"><v>'+v+'</v></c>';
+        return '<c r="'+ref+'" s="'+s+'" t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+      }).join("");
+      return '<row r="'+(ri+1)+'" ht="'+(row.ht||22)+'" customHeight="1">'+cells+'</row>';
+    }).join("");
+    var cols = widths.length ? '<cols>'+widths.map(function(w,i){
+      return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>'; }).join("")+'</cols>' : '';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+      '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'+
+      '<dimension ref="A1:'+colName(maxc)+Math.max(1,rows.length)+'"/>'+
+      '<sheetViews><sheetView rightToLeft="1" showGridLines="0" workbookViewId="0"/></sheetViews>'+
+      '<sheetFormatPr defaultRowHeight="18"/>'+cols+
+      '<sheetData>'+body+'</sheetData>'+
+      (sh.merges && sh.merges.length ? '<mergeCells count="'+sh.merges.length+'">'+
+        sh.merges.map(function(m){ return '<mergeCell ref="'+m+'"/>'; }).join("")+'</mergeCells>' : '')+
+      '<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'+
+      '<pageSetup orientation="'+(sh.landscape?"landscape":"portrait")+'" paperSize="9" fitToWidth="1" fitToHeight="0"/>'+
+      '</worksheet>';
+  }
+
+  function build(sheets){
+    var used = [];
+    var names = sheets.map(function(s){ return safeName(s.name, used); });
+    var files = [];
+    var types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+      '<Default Extension="xml" ContentType="application/xml"/>'+
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+
+      sheets.map(function(s,i){ return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join("")+
+      '</Types>';
+    var wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '+
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+      names.map(function(n,i){ return '<sheet name="'+esc(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>'; }).join("")+
+      '</sheets></workbook>';
+    var wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      names.map(function(n,i){ return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>'; }).join("")+
+      '<Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'+
+      '</Relationships>';
+    files.push({ name:"[Content_Types].xml", data:enc.encode(types) });
+    files.push({ name:"_rels/.rels", data:enc.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'+
+      '</Relationships>') });
+    files.push({ name:"xl/workbook.xml", data:enc.encode(wb) });
+    files.push({ name:"xl/_rels/workbook.xml.rels", data:enc.encode(wbRels) });
+    files.push({ name:"xl/styles.xml", data:enc.encode(STYLES) });
+    sheets.forEach(function(s,i){ files.push({ name:"xl/worksheets/sheet"+(i+1)+".xml", data:enc.encode(sheetXml(s)) }); });
+    return zip(files);
+  }
+  return { build: build };
+})();
+(function(){
+  "use strict";
+  var USERS = { "ad":"123", "ms":"123", "rs":"123" };
+  var NAMES = { ad:"Admin — المدير", ms:"Ms — المستودع", rs:"Rs — الرصيف" };
+  var user = "", uid = "";
+  function isDock(){ return uid === "rs"; }
+  function KEY(u){ return "port_log_v3_" + (u || uid || "guest"); }
+  function blankState(){ return { ship:"", company:"", date:"", shipWeight:"", cargos:[], archive:[], sheets:[], active:0 }; }
+
+  var state = blankState();
+
+  var $ = function(id){ return document.getElementById(id); };
+  var pad = function(n){ return String(n).padStart(2,"0"); };
+  var num = function(n){ return Number(n||0).toLocaleString("en-US"); };
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function nowHM(){ var d=new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); }
+  function dmy(iso){ if(!iso) return ""; var p=iso.split("-"); return p.length===3 ? p[2]+"/"+p[1]+"/"+p[0] : iso; }
+  var toastT;
+  function toast(m){ var t=$("toast"); t.textContent=m; t.classList.add("show");
+    clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove("show"); },2600); }
+
+  /* ---- الحفظ الدائم ---- */
+  var store = {
+    load: async function(u){
+      var k=KEY(u);
+      try{ if(window.storage){ var r=await window.storage.get(k); if(r&&r.value) return JSON.parse(r.value); } }catch(e){}
+      try{ var v=localStorage.getItem(k); if(v) return JSON.parse(v); }catch(e){}
+      return null;
+    },
+    save: async function(d,u){
+      var k=KEY(u), j=JSON.stringify(d);
+      try{ if(window.storage){ await window.storage.set(k,j); return true; } }catch(e){}
+      try{ localStorage.setItem(k,j); return true; }catch(e){}
+      return false;
+    }
+  };
+  function persist(){ store.save(state); }
+
+  /* ---- الأوراق ---- */
+  function newSheet(staff, shift, start){
+    return { id: Date.now()+"-"+Math.random().toString(36).slice(2,6),
+             staff: staff||"", shift: shift||"صباحي", start: start||nowHM(), serial:0, notes:"", end:"", records:[] };
+  }
+  function sheet(){ if(!state.sheets.length) state.sheets.push(newSheet()); 
+    if(state.active >= state.sheets.length) state.active = 0; return state.sheets[state.active]; }
+  function sheetTitle(s){ return (s.staff || "بدون اسم") + " · " + s.shift; }
+
+
+  /* =====================  HarborAuthLightSwitch  ===================== */
+  /* gsap.to عند توفّر المكتبة، وإلا محاكٍ بسيط بنفس المدة (0.6ث) ليعمل دون اتصال */
+  function gsapTo(target, vars){
+    if(window.gsap && window.gsap.to) return window.gsap.to(target, vars);
+    var keys = Object.keys(vars).filter(function(k){ return ["duration","ease","onUpdate","onComplete"].indexOf(k)<0; });
+    var from = {}; keys.forEach(function(k){ from[k] = target[k]; });
+    var dur = (vars.duration==null ? 0.6 : vars.duration)*1000, t0 = null, dead = false;
+    var reduce = false; try{ reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){}
+    var raf = window.requestAnimationFrame || function(f){ return setTimeout(function(){ f(Date.now()); },16); };
+    function tick(now){
+      if(dead) return;
+      if(t0===null) t0 = now;
+      var k = (reduce || dur<=0) ? 1 : Math.min(1,(now-t0)/dur), e = 1-Math.pow(1-k,3);
+      keys.forEach(function(n){ target[n] = from[n] + (vars[n]-from[n])*e; });
+      if(vars.onUpdate) vars.onUpdate();
+      if(k<1) raf(tick); else if(vars.onComplete) vars.onComplete();
+    }
+    raf(tick);
+    return { kill:function(){ dead = true; } };
+  }
+
+  /* ---- أصوات مولَّدة بـ WebAudio (بلا ملفات، تعمل دون اتصال) ---- */
+  var _ac = null;
+  function audioCtx(){
+    try{
+      var AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      if(!_ac) _ac = new AC();
+      if(_ac.state==="suspended" && _ac.resume) _ac.resume();
+      return _ac;
+    }catch(e){ return null; }
+  }
+  function sfxClick(ac, t, vol){
+    var len = Math.floor(ac.sampleRate*0.035), buf = ac.createBuffer(1,len,ac.sampleRate), dd = buf.getChannelData(0);
+    for(var i=0;i<len;i++) dd[i] = (Math.random()*2-1)*Math.pow(1-i/len,3);
+    var n = ac.createBufferSource(); n.buffer = buf;
+    var hp = ac.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=1400;
+    var g = ac.createGain(); g.gain.value = vol;
+    n.connect(hp); hp.connect(g); g.connect(ac.destination); n.start(t);
+    sfxTone(ac, t, "sine", 170, 55, 0.1, vol*0.55);
+  }
+  function sfxTone(ac, t, type, f0, f1, dur, vol){
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type=type; o.frequency.setValueAtTime(f0,t);
+    if(f1!==f0) o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+dur*0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+dur+0.03);
+  }
+  function lampSound(on){
+    var ac=audioCtx(); if(!ac) return; var t=ac.currentTime+0.01;
+    sfxClick(ac,t,0.7);
+    if(on){ sfxTone(ac,t+0.08,"sawtooth",90,140,0.5,0.05); sfxTone(ac,t+0.14,"sine",1040,1560,0.4,0.07); }
+    else  { sfxTone(ac,t+0.06,"sine",520,150,0.3,0.06); }
+  }
+  function doorSound(okLogin){
+    var ac=audioCtx(); if(!ac) return; var t=ac.currentTime+0.01;
+    if(okLogin){ sfxClick(ac,t,0.5); sfxTone(ac,t+0.05,"sawtooth",230,150,0.5,0.035); sfxTone(ac,t+0.62,"sine",880,1320,0.35,0.05); }
+    else { sfxTone(ac,t,"sine",130,60,0.14,0.28); sfxTone(ac,t+0.26,"sine",130,60,0.14,0.28);
+           sfxTone(ac,t+0.55,"square",160,110,0.3,0.03); }
+  }
+  function tickSound(){ var ac=audioCtx(); if(ac) sfxClick(ac, ac.currentTime+0.005, 0.22); }
+
+  function HarborAuthLightSwitch(){
+    var isOn = false, prog = { p:0 }, tw = null;
+    var lamp=$("lamp"), form=$("loginForm"), login=$("login"), hint=$("hint");
+    var handle=$("ropeHandle"), cord=$("ropeCord");
+    var A = { bt:[14,27,42],  bb:[14,27,42], gl:[28,54,82],   glass:[44,66,87],  moon:[201,214,226] };
+    var B = { bt:[34,92,134], bb:[11,34,54], gl:[232,170,56], glass:[255,214,110], moon:[255,200,92] };
+    function mix(a,b,t){ return "rgb("+a.map(function(v,i){ return Math.round(v+(b[i]-v)*t); }).join(",")+")"; }
+    function paint(){
+      var p = prog.p;
+      login.style.setProperty("--bt", mix(A.bt,B.bt,p));
+      login.style.setProperty("--bb", mix(A.bb,B.bb,p));
+      login.style.setProperty("--gl", mix(A.gl,B.gl,p));
+      document.body.style.backgroundColor = mix(A.bb,B.bb,p);
+      $("lampGlow").style.opacity = String(p);
+      $("stars").style.opacity = String(1-0.65*p);
+      $("lampGlass").setAttribute("fill", mix(A.glass,B.glass,p));
+      $("moon").setAttribute("fill", mix(A.moon,B.moon,p));
+      $("moonHalo").setAttribute("fill", mix(A.moon,B.moon,p));
+    }
+    function setOn(on, instant){
+      isOn = !!on;
+      form.classList.toggle("active", isOn);               /* إظهار/إخفاء الحقول فوراً */
+      lamp.setAttribute("aria-checked", isOn ? "true" : "false");
+      hint.style.display = isOn ? "none" : "";
+      if(!instant) lampSound(isOn);
+      if(tw && tw.kill) tw.kill();
+      if(instant){ prog.p = isOn ? 1 : 0; paint(); return; }
+      tw = gsapTo(prog, { p: isOn ? 1 : 0, duration:0.6, ease:"power2.out", onUpdate:paint });
+      if(isOn){ try{ setTimeout(function(){ form.scrollIntoView({behavior:"smooth", block:"center"}); },120); }catch(e){} }
+    }
+    /* حركة الحبل */
+    var pullY = { v:0 }, ropeTw = null;
+    function pull(v){
+      pullY.v = v;
+      cord.setAttribute("y2", String(146+v));
+      handle.setAttribute("transform", "translate(0,"+v+")");
+    }
+    function spring(to, dur){
+      if(ropeTw && ropeTw.kill) ropeTw.kill();
+      ropeTw = gsapTo(pullY, { v:to, duration:dur, ease:"power2.out", onUpdate:function(){ pull(pullY.v); } });
+    }
+    function tug(){ spring(30, 0.12); setTimeout(function(){ spring(0, 0.4); }, 130); }
+    function toggle(){ setOn(!isOn); tug(); }
+    var dragging=false, startY=0, moved=0, suppress=false;
+    lamp.addEventListener("pointerdown", function(e){
+      dragging = true; startY = e.clientY; moved = 0;
+      try{ lamp.setPointerCapture(e.pointerId); }catch(err){}
+      if(ropeTw && ropeTw.kill) ropeTw.kill();
+    });
+    lamp.addEventListener("pointermove", function(e){
+      if(!dragging) return;
+      moved = Math.max(0, Math.min(64, e.clientY-startY)); pull(moved);
+    });
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      if(moved>=34){ suppress = true; setOn(!isOn); }
+      spring(0, 0.45);
+    }
+    lamp.addEventListener("pointerup", endDrag);
+    lamp.addEventListener("pointercancel", endDrag);
+    lamp.addEventListener("click", function(){
+      if(suppress){ suppress=false; return; }
+      toggle();
+    });
+    lamp.addEventListener("keydown", function(e){
+      if(e.key==="Enter" || e.key===" "){ e.preventDefault(); toggle(); }
+    });
+    paint();
+    return { setOn:setOn, toggle:toggle, isOn:function(){ return isOn; } };
+  }
+  var harbor = HarborAuthLightSwitch();
+
+  /* ---- الدخول ---- */
+  /* تحويل الأرقام العربية والفارسية إلى لاتينية */
+  function toLatin(v){
+    return String(v||"").replace(/[\u0660-\u0669]/g, function(c){ return String(c.charCodeAt(0)-0x0660); })
+                        .replace(/[\u06F0-\u06F9]/g, function(c){ return String(c.charCodeAt(0)-0x06F0); });
+  }
+
+  function checkCreds(){
+    var raw=toLatin($("u").value).trim(), u=raw.toLowerCase(), p=toLatin($("p").value).trim();
+    if(!raw || !p) return { ok:false, msg:"أدخل اسم المستخدم وكلمة المرور." };
+    if(!Object.prototype.hasOwnProperty.call(USERS,u) || USERS[u]!==p)
+      return { ok:false, msg:"اسم المستخدم أو كلمة المرور غير صحيحة." };
+    return { ok:true, u:u };
+  }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
+  var loginBusy = false;
+  async function login(){
+    if(loginBusy) return;
+    var c=checkCreds(), e=$("loginErr"), btn=$("loginBtn"), reduce=false;
+    try{ reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }catch(x){}
+    e.classList.remove("show");
+    loginBusy = true;
+    if(reduce){
+      if(!c.ok){ e.textContent=c.msg; e.classList.add("show"); }
+    } else {
+      btn.setAttribute("data-st","walk"); await sleep(760);          /* الشخص يمشي نحو الباب */
+      if(c.ok){
+        btn.setAttribute("data-st","open"); doorSound(true); await sleep(540);   /* يفتح الباب */
+        btn.setAttribute("data-st","enter"); await sleep(660);                    /* يدخل */
+      } else {
+        btn.setAttribute("data-st","fail"); doorSound(false);                     /* لا يستطيع الفتح */
+        e.textContent=c.msg; e.classList.add("show");
+        await sleep(1000);
+        btn.setAttribute("data-st","leave"); await sleep(620);
+      }
+      btn.removeAttribute("data-st");
+    }
+    loginBusy = false;
+    if(c.ok) enterApp(c.u);
+  }
+  function enterApp(u){
+    uid = u;
+    user = NAMES[u] || u;
+    $("login").classList.remove("active");
+    try { window.scrollTo(0,0); } catch(err){}
+    if(u==="ad"){
+      $("admin").classList.add("active");
+      adSec = "dock"; adShip = ""; adDate = "all"; shDate = "all";
+      loadAdmin();
+      return;
+    }
+    $("opName").textContent = "المستخدم: "+user;
+    $("app").classList.add("active");
+    applyRole();
+    loadUserData();
+  }
+
+  function applyRole(){
+    var dock = isDock();
+    $("f_shipw").style.display   = dock ? "none" : "";
+    $("f_weight").style.display  = dock ? "none" : "";
+    $("notesBlock").style.display = dock ? "" : "none";
+    $("f_driver").querySelector("label").textContent = dock ? "اسم السائق (اختياري)" : "اسم السائق";
+    var lab = $("f_arrive").querySelector("label");
+    if(lab && lab.firstChild) lab.firstChild.nodeValue = dock ? "الوقت" : "موعد وصول السائق";
+  }
+
+  async function loadUserData(){
+    var saved = await store.load();
+    state = (saved && Array.isArray(saved.sheets) && saved.sheets.length) ? saved : blankState();
+    if(!Array.isArray(state.cargos)) state.cargos = [];
+    if(!Array.isArray(state.archive)) state.archive = [];
+    if(!state.sheets.length) state.sheets.push(newSheet());
+    if(!state.date) state.date = todayISO();
+    shipCommitted = (state.ship||"").trim();
+    if(state.active >= state.sheets.length) state.active = 0;
+    $("i_ship").value = state.ship || "";
+    $("i_company").value = state.company || "";
+    $("i_date").value = state.date;
+    $("i_shipw").value = state.shipWeight || "";
+    view = "cargo"; pick = "";
+    $("viewbar").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.dataset.view==="cargo"); });
+    endEdit(); loadSheetIntoForm(); clearForm(); render();
+  }
+  $("loginBtn").addEventListener("click", login);
+  $("showPw").addEventListener("change", function(ev){ $("p").type = ev.target.checked ? "text" : "password"; });
+  ["u","p"].forEach(function(id){ $(id).addEventListener("keydown", function(ev){ if(ev.key==="Enter") login(); }); });
+  function doLogout(){
+    $("app").classList.remove("active"); $("admin").classList.remove("active"); $("login").classList.add("active");
+    $("p").value=""; user=""; uid=""; state = blankState(); endEdit();
+    harbor.setOn(false, true);
+  }
+  $("logoutBtn").addEventListener("click", doLogout);
+  $("adLogout").addEventListener("click", doLogout);
+
+  /* ---- تصحيح الأرقام العربية في الحقول الرقمية ---- */
+  ["i_plate","i_weight","i_shipw"].forEach(function(id){
+    var el=$(id); if(!el) return;
+    el.addEventListener("input", function(){
+      var v=toLatin(el.value);
+      if(v!==el.value){ var s0=el.selectionStart; el.value=v; try{ el.setSelectionRange(s0,s0); }catch(e){} }
+    });
+  });
+
+  /* ---- أزرار «الآن» ---- */
+  document.querySelectorAll(".now").forEach(function(b){
+    b.addEventListener("click", function(ev){ ev.preventDefault();
+      $(b.dataset.now).value = nowHM();
+      if(b.dataset.now==="i_start"){ sheet().start = nowHM(); persist(); }
+      if(b.dataset.now==="i_end"){ sheet().end = nowHM(); persist(); }
+    });
+  });
+
+  /* ---- بيانات الباخرة ---- */
+  ["ship","company","date"].forEach(function(k){
+    $("i_"+k).addEventListener("input", function(){ state[k]=$("i_"+k).value; persist(); });
+  });
+  var shipCommitted = "";
+  function archiveShip(oldName){
+    var cur = sheet();
+    state.archive.push({ ship:oldName, company:state.company, shipWeight:state.shipWeight,
+                         date:state.date, sheets:state.sheets, archivedAt:Date.now() });
+    state.sheets = [ newSheet(cur.staff, cur.shift, nowHM()) ];
+    state.active = 0; state.company = ""; state.shipWeight = "";
+    $("i_company").value = ""; $("i_shipw").value = "";
+    endEdit(); loadSheetIntoForm(); clearForm(); render();
+  }
+  $("i_ship").addEventListener("change", function(){
+    var nn = $("i_ship").value.trim(), old = shipCommitted;
+    if(!nn || nn===old) return;
+    var hasRecs = state.sheets.some(function(sh){ return sh.records.length; });
+    if(!old || !hasRecs){ shipCommitted = nn; return; }
+    ask("تغيير اسم الباخرة",
+        "تغيّر الاسم من \u201C"+old+"\u201D إلى \u201C"+nn+"\u201D. هل هذه باخرة جديدة؟ "+
+        "«باخرة جديدة» تحفظ سجلات الباخرة السابقة وتبدأ سجلاً فارغاً. «تصحيح الاسم» يغيّر الاسم فقط ويُبقي السجلات.",
+        function(){
+          state.ship = nn; archiveShip(old); shipCommitted = nn; persist();
+          toast("بدأت باخرة جديدة، وحُفظت سجلات \u201C"+old+"\u201D.");
+        },
+        { yes:"باخرة جديدة", no:"تصحيح الاسم", safe:true, sticky:true,
+          onNo:function(){ state.ship = nn; shipCommitted = nn; persist(); toast("تم تصحيح اسم الباخرة."); } });
+  });
+  $("i_shipw").addEventListener("input", function(){
+    state.shipWeight = toLatin($("i_shipw").value).replace(/,/g,"").trim(); persist(); });
+  $("i_notes").addEventListener("input", function(){ sheet().notes = $("i_notes").value; persist(); });
+
+  /* ---- الموظف / الوردية ---- */
+  $("i_staff").addEventListener("change", function(){
+    var name=$("i_staff").value.trim(), cur=sheet();
+    if(!name || name===cur.staff) return;
+    if(cur.records.length){
+      var s=newSheet(name, cur.shift, nowHM());
+      state.sheets.push(s); state.active = state.sheets.length-1;
+      $("i_start").value = s.start; $("i_end").value = "";
+      toast("تم فتح ورقة جديدة باسم "+name+".");
+    } else { cur.staff = name; }
+    persist(); render();
+  });
+  document.querySelectorAll('input[name="shift"]').forEach(function(r){
+    r.addEventListener("change", function(){ sheet().shift=r.value; persist(); render(); });
+  });
+  $("i_start").addEventListener("change", function(){ sheet().start=$("i_start").value; persist(); });
+  $("i_end").addEventListener("change", function(){ sheet().end=$("i_end").value; persist(); });
+
+  function loadSheetIntoForm(){
+    var s=sheet();
+    $("i_staff").value = s.staff;
+    $("i_start").value = s.start || nowHM();
+    $("i_end").value = s.end || "";
+    $("i_notes").value = s.notes || "";
+    var r=document.querySelector('input[name="shift"][value="'+s.shift+'"]'); if(r) r.checked=true;
+  }
+
+  /* ---- إضافة شاحنة ---- */
+  function truckFields(){
+    var f = [
+      { key:"plate", check:function(v){ return v.length<2 ? "أدخل رقم السيارة." : ""; } },
+      { key:"cargo", check:function(v){ return v.length<2 ? "اختر نوع الشحنة أو أضف نوعاً جديداً." : ""; } }
+    ];
+    if(isDock()){
+      f.push({ key:"driver", check:function(){ return ""; } });
+      f.push({ key:"arrive", check:function(){ return ""; } });
+    } else {
+      f.push({ key:"driver", check:function(v){ return v.length<3 ? "أدخل اسم السائق." : ""; } });
+      f.push({ key:"arrive", check:function(v){ return !v ? "حدّد موعد الوصول." : ""; } });
+      f.push({ key:"weight", check:function(v){ v=v.replace(/,/g,"");
+        return (v===""||isNaN(+v)) ? "أدخل الوزن بالأرقام." : (+v<=0 ? "يجب أن يكون الوزن أكبر من صفر." : ""); } });
+    }
+    return f;
+  }
+  function flag(id, msg){
+    var box=$("f_"+id), inp=$("i_"+id);
+    if(inp) inp.classList.toggle("bad", !!msg);
+    if(id==="cargo") $("i_cargo_sel").classList.toggle("bad", !!msg);
+    if(!box) return;
+    box.classList.toggle("bad", !!msg);
+    var m=box.querySelector(".msg"); if(m) m.textContent = msg || "";
+  }
+  function save(){
+    var ok=true, first=null, s=sheet();
+    if(!state.ship.trim()){ flag("ship","أدخل اسم الباخرة أولاً."); ok=false; first=$("i_ship"); } else flag("ship","");
+    if(!s.staff){ flag("staff","أدخل اسم الموظف أولاً."); ok=false; first=first||$("i_staff"); } else flag("staff","");
+
+    var rec={ no:0 };
+    truckFields().forEach(function(f){
+      var v = f.key==="cargo" ? cargoValue() : $("i_"+f.key).value.trim();
+      var m = f.check(v);
+      flag(f.key, m);
+      if(m){ ok=false; first = first || (f.key==="cargo" ? cargoFocusEl() : $("i_"+f.key)); }
+      rec[f.key]=v;
+    });
+    if(!ok){ first.focus(); toast("راجع الحقول المظللة قبل الحفظ."); return; }
+
+    rec.weight = isDock() ? 0 : Number(String(rec.weight).replace(/,/g,""));
+    rec.driver = rec.driver || "";
+    rememberCargo(rec.cargo);
+    if(editNo){
+      var i=s.records.findIndex(function(x){ return x.no===editNo; });
+      if(i>-1){ rec.no = editNo; rec.date = s.records[i].date || state.date || todayISO(); s.records[i]=rec; }
+      var n=editNo; endEdit(); persist(); render(); clearForm();
+      toast("تم حفظ تعديل قسيمة رقم "+String(n).padStart(3,"0")+".");
+      return;
+    }
+    rec.no = ++s.serial;
+    rec.date = state.date || todayISO();
+    s.records.unshift(rec);
+    persist(); render(); clearForm();
+    toast(isDock() ? "تمت إضافة الشاحنة "+rec.plate+"." : "تمت إضافة الشاحنة "+rec.plate+" — "+num(rec.weight)+" كجم.");
+  }
+  /* ---- قائمة أنواع الشحنة ---- */
+  function cargoValue(){
+    var v=$("i_cargo_sel").value;
+    return v==="__new" ? $("i_cargo").value.trim() : v;
+  }
+  function cargoFocusEl(){ return $("i_cargo_sel").value==="__new" ? $("i_cargo") : $("i_cargo_sel"); }
+  function syncCargoNew(){
+    var v=$("i_cargo_sel").value, isNew = v==="__new";
+    $("i_cargo").style.display = isNew ? "" : "none";
+    $("cargoDel").style.display = (!isNew && v) ? "" : "none";
+  }
+  function renderCargoSelect(keep){
+    var list = Array.isArray(state.cargos) ? state.cargos : [];
+    var cur = keep===undefined ? $("i_cargo_sel").value : keep;
+    $("i_cargo_sel").innerHTML = '<option value="">اختر نوع الشحنة…</option>' +
+      list.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+'</option>'; }).join("") +
+      '<option value="__new">＋ إضافة نوع جديد…</option>';
+    $("i_cargo_sel").value = (cur && (cur==="__new" || list.indexOf(cur)>-1)) ? cur : (list.length ? "" : "__new");
+    syncCargoNew();
+  }
+  function setCargo(v){
+    var list = Array.isArray(state.cargos) ? state.cargos : [];
+    if(list.indexOf(v)>-1){ renderCargoSelect(v); $("i_cargo").value=""; }
+    else { renderCargoSelect("__new"); $("i_cargo").value = v||""; }
+  }
+  function rememberCargo(v){
+    v = String(v||"").trim();
+    if(!v) return;
+    if(!Array.isArray(state.cargos)) state.cargos = [];
+    var i = state.cargos.indexOf(v);
+    if(i>-1) state.cargos.splice(i,1);
+    state.cargos.unshift(v);
+    if(state.cargos.length>40) state.cargos.length = 40;
+  }
+  $("i_cargo_sel").addEventListener("change", function(){
+    syncCargoNew(); flag("cargo","");
+    if($("i_cargo_sel").value==="__new"){ try{ $("i_cargo").focus(); }catch(e){} }
+  });
+  $("cargoDel").addEventListener("click", function(){
+    var v=$("i_cargo_sel").value; if(!v || v==="__new") return;
+    ask("حذف نوع الشحنة","سيُحذف النوع \u201C"+v+"\u201D من القائمة فقط. الشاحنات المسجّلة سابقاً لا تتأثر.", function(){
+      var i=state.cargos.indexOf(v); if(i>-1) state.cargos.splice(i,1);
+      persist(); renderCargoSelect(""); toast("تم حذف النوع من القائمة.");
+    });
+  });
+
+  /* ---- نافذة التأكيد ---- */
+  var _yes=null, _no=null, _sticky=false;
+  function ask(title, text, cb, o){
+    o = o || {};
+    $("mTitle").textContent = title;
+    $("mText").textContent = text;
+    $("mYes").textContent = o.yes || "حذف";
+    $("mNo").textContent  = o.no  || "إلغاء";
+    $("mYes").className = o.safe ? "btn-dark" : "btn-danger";
+    _yes = cb; _no = o.onNo || null; _sticky = !!o.sticky;
+    $("modal").classList.add("on");
+  }
+  function closeAsk(){ $("modal").classList.remove("on"); _yes=null; _no=null; _sticky=false; }
+  $("mNo").addEventListener("click", function(){ var f=_no; closeAsk(); if(f) f(); });
+  $("modal").addEventListener("click", function(e){ if(e.target===$("modal") && !_sticky) closeAsk(); });
+  $("mYes").addEventListener("click", function(){ var f=_yes; closeAsk(); if(f) f(); });
+
+  /* ---- وضع التعديل ---- */
+  var editNo = 0;
+  function startEdit(no){
+    var r = sheet().records.find(function(x){ return x.no===no; });
+    if(!r) return;
+    editNo = no;
+    $("i_plate").value  = r.plate;
+    setCargo(r.cargo);
+    $("i_driver").value = r.driver || "";
+    $("i_arrive").value = r.arrive || "";
+    $("i_weight").value = r.weight;
+    ["plate","cargo","driver","arrive","weight"].forEach(function(k){ flag(k,""); });
+    $("saveBtn").textContent = "حفظ التعديل";
+    $("cancelEditBtn").style.display = "";
+    $("clearBtn").style.display = "none";
+    $("editBadge").style.display = "";
+    render();
+    try { $("i_plate").scrollIntoView({behavior:"smooth", block:"center"}); } catch(e){}
+    toast("تعديل قسيمة رقم "+String(no).padStart(3,"0"));
+  }
+  function endEdit(){
+    editNo = 0;
+    $("saveBtn").textContent = "إضافة الشاحنة";
+    $("cancelEditBtn").style.display = "none";
+    $("clearBtn").style.display = "";
+    $("editBadge").style.display = "none";
+  }
+  $("cancelEditBtn").addEventListener("click", function(){ endEdit(); clearForm(); render(); toast("تم إلغاء التعديل."); });
+
+  /* ---- حذف ورقة موظف ---- */
+  $("delSheetBtn").addEventListener("click", function(){
+    var s=sheet();
+    if(state.sheets.length<2 && !s.records.length){ toast("لا توجد ورقة لحذفها."); return; }
+    ask("حذف ورقة الموظف",
+        "سيتم حذف ورقة \u201C"+(s.staff||"بدون اسم")+"\u201D مع "+s.records.length+
+        " شاحنة مسجّلة فيها. لا يمكن التراجع عن هذه العملية.",
+        function(){
+          state.sheets.splice(state.active,1);
+          if(!state.sheets.length) state.sheets.push(newSheet());
+          state.active = Math.max(0, Math.min(state.active, state.sheets.length-1));
+          endEdit(); persist(); render(); loadSheetIntoForm(); clearForm();
+          toast("تم حذف الورقة.");
+        });
+  });
+
+  function clearForm(){
+    ["plate","driver","weight"].forEach(function(k){ $("i_"+k).value=""; flag(k,""); });
+    $("i_cargo").value=""; renderCargoSelect(""); flag("cargo","");
+    $("i_arrive").value = nowHM(); flag("arrive","");
+    $("i_plate").focus();
+  }
+  $("saveBtn").addEventListener("click", save);
+  $("clearBtn").addEventListener("click", clearForm);
+
+  /* ---- العرض ---- */
+  var view = "new", pick = "";
+  $("viewbar").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      view = b.dataset.view;
+      $("viewbar").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      render();
+    });
+  });
+  $("cargoPick").addEventListener("change", function(){ pick = $("cargoPick").value; render(); });
+
+  function render(){
+    var s=sheet(), dock=isDock();
+    renderCargoSelect();
+    if(view!=="cargo"){ $("pickbar").classList.remove("on"); pick = ""; }
+    /* التبويبات */
+    var tabs = state.sheets.map(function(sh,i){
+      return '<button class="tab'+(i===state.active?" on":"")+'" data-i="'+i+'">'+
+             esc(sheetTitle(sh))+' · '+sh.records.length+'</button>';
+    }).join("");
+    $("tabs").innerHTML = tabs + '<button class="tab add" data-add="1">+ ورقة جديدة</button>';
+    $("tabs").querySelectorAll(".tab").forEach(function(b){
+      b.addEventListener("click", function(){
+        endEdit();
+        if(b.dataset.add){
+          state.sheets.push(newSheet("", s.shift, nowHM()));
+          state.active = state.sheets.length-1;
+          persist(); render(); loadSheetIntoForm(); $("i_staff").focus();
+          toast("ورقة جديدة — أدخل اسم الموظف.");
+        } else {
+          state.active = +b.dataset.i; persist(); render(); loadSheetIntoForm();
+        }
+      });
+    });
+
+    var recs=s.records;
+    var sheetTotal = recs.reduce(function(a,r){ return a+(Number(r.weight)||0); },0);
+    var all = state.sheets.reduce(function(a,sh){
+      return a + sh.records.reduce(function(x,r){ return x+(Number(r.weight)||0); },0); },0);
+    var allCount = state.sheets.reduce(function(a,sh){ return a+sh.records.length; },0);
+    $("cnt").textContent = num(recs.length);
+    if(dock){
+      $("tot").textContent = num(allCount);
+      $("tot").nextElementSibling.textContent = "إجمالي الشاحنات (كل الأوراق)";
+      $("grandBox").style.display = "none";
+    } else {
+      $("tot").textContent = num(sheetTotal);
+      $("tot").nextElementSibling.textContent = "وزن هذه الورقة (كجم)";
+      $("grandBox").style.display = "";
+      $("grand").innerHTML = num(all)+'<i>كجم</i>';
+    }
+
+
+    if(!recs.length && !(view==="sum" && allCount>0)){
+      $("list").innerHTML = '<div class="empty"><b>لا توجد شاحنات في هذه الورقة</b>'+
+        '<p>أضف الشاحنة الأولى من القسم الثالث،<br>وسيُنشأ جدول خاص بنوعها.</p></div>';
+      return;
+    }
+
+    if(view==="sum"){
+      $("list").innerHTML = (recs.length ? cargoBox("أنواع هذه الورقة"+(s.staff?" — "+s.staff:""), groupCargo(recs), true) : "") +
+        (state.sheets.length>1 ? cargoBox("جميع الأوراق (للاطلاع)", groupCargo(allRecords()), false) : "");
+      $("list").querySelectorAll("[data-xl]").forEach(function(b){
+        b.addEventListener("click", function(){ exportType(b.dataset.xl); });
+      });
+      return;
+    }
+
+    if(view==="cargo"){
+      var groups = groupCargo(recs);
+      var names = groups.map(function(g){ return g.name; });
+      if(pick && names.indexOf(pick)<0) pick = "";
+      $("pickbar").classList.add("on");
+      $("cargoPick").innerHTML =
+        '<option value="">كل الأنواع (' + num(recs.length) + ' شاحنة)</option>' +
+        groups.map(function(g){
+          return '<option value="'+esc(g.name)+'"'+(pick===g.name?" selected":"")+'>'+
+                 esc(g.name)+' — '+num(g.count)+' شاحنة'+(dock?'':' · '+num(g.weight)+' كجم')+'</option>';
+        }).join("");
+      var shown = pick ? groups.filter(function(g){ return g.name===pick; }) : groups;
+      $("list").innerHTML = shown.map(function(g){
+        return '<div class="cargo-box"><h3>'+esc(g.name)+' <span style="font-size:12px;color:var(--ink-soft);font-weight:600">· '+
+               num(g.count)+' شاحنة'+(dock?'':' · '+num(g.weight)+' كجم')+'</span></h3>'+
+               trTable(g.items,{dock:dock})+'</div>';
+      }).join("");
+      bindSlips(s);
+      return;
+    }
+
+    $("list").innerHTML = recs.map(slipHTML).join("");
+    bindSlips(s);
+  }
+
+  /* جدول سجلات (للمستخدم وللمدير) */
+  function trTable(recs, o){
+    var head = '<tr><th>م</th><th>السيارة</th>'+(o.showType?'<th>النوع</th>':'')+'<th>السائق</th><th>الوقت</th>'+
+               (o.dock?'':'<th>الوزن</th>')+'<th></th></tr>';
+    var rows = recs.map(function(r, idx){
+      var at = o.admin ? ' data-u="'+o.u+'" data-sa="'+o.sa+'" data-sid="'+esc(o.sid)+'" data-no="'+r.no+'"' : '';
+      var eb = o.admin ? '<button class="edt" data-aedit="1"'+at+'>✎</button>' : '<button class="edt" data-edit="'+r.no+'">✎</button>';
+      var db = o.admin ? '<button class="del" data-adel="1"'+at+'>✕</button>' : '<button class="del" data-no="'+r.no+'">✕</button>';
+      return '<tr><td class="mono">'+(o.admin ? r.no : recs.length-idx)+'</td><td class="mono ltr">'+esc(r.plate)+'</td>'+
+        (o.showType?'<td>'+esc(r.cargo)+'</td>':'')+
+        '<td>'+esc(r.driver||"—")+'</td><td class="mono">'+esc(r.arrive||"")+'</td>'+
+        (o.dock?'':'<td class="mono">'+num(r.weight)+'</td>')+
+        '<td class="racts">'+eb+db+'</td></tr>';
+    }).join("");
+    return '<div class="tblwrap"><table class="rt">'+head+rows+'</table></div>';
+  }
+
+  /* ---- تجميع حسب نوع الشحنة ---- */
+  function allRecords(){
+    return state.sheets.reduce(function(a,sh){ return a.concat(sh.records); },[]);
+  }
+  function groupCargo(recs){
+    var map={}, order=[];
+    recs.forEach(function(r){
+      var k=(r.cargo||"بدون نوع").trim() || "بدون نوع";
+      if(!map[k]){ map[k]={name:k,count:0,weight:0,items:[]}; order.push(k); }
+      map[k].count++; map[k].weight+=(Number(r.weight)||0); map[k].items.push(r);
+    });
+    return order.map(function(k){ return map[k]; })
+                .sort(function(a,b){ return b.weight-a.weight; });
+  }
+  function cargoBox(title, groups, xl){
+    var tc=0, tw=0;
+    var rows = groups.map(function(g){
+      tc+=g.count; tw+=g.weight;
+      return '<div class="cargo-row"><span class="nm">'+esc(g.name)+'</span>'+
+             '<span class="qt">'+num(g.count)+' شاحنة</span>'+
+             (isDock()?'':'<span class="wt mono">'+num(g.weight)+'</span>')+
+             (xl?'<button class="xlbtn" data-xl="'+esc(g.name)+'">Excel</button>':'')+'</div>';
+    }).join("");
+    return '<div class="cargo-box"><h3>'+esc(title)+'</h3>'+rows+
+      '<div class="cargo-row sum"><span class="nm">الإجمالي</span>'+
+      '<span class="qt">'+num(tc)+' شاحنة</span>'+
+      (isDock()?'':'<span class="wt mono">'+num(tw)+'</span>')+'</div></div>';
+  }
+
+  function slipHTML(r){
+      return '<article class="slip'+(editNo===r.no?' editing':'')+'">'+
+        '<div class="slip-top"><div>'+
+          '<div class="serial mono">قسيمة رقم '+String(r.no).padStart(3,"0")+'</div>'+
+          '<div class="plate mono ltr">'+esc(r.plate)+'</div></div>'+
+          (isDock()?'':'<div class="stamp"><b class="mono">'+num(r.weight)+'</b><small>كجم</small></div>')+'</div>'+
+        '<div class="slip-rows">'+
+          '<div class="row"><span>نوع الشحنة</span><b>'+esc(r.cargo)+'</b></div>'+
+          '<div class="row"><span>اسم السائق</span><b>'+esc(r.driver||"—")+'</b></div>'+
+          '<div class="row"><span>'+(isDock()?'الوقت':'موعد الوصول')+'</span><b class="mono">'+esc(r.arrive||"")+'</b></div>'+
+        '</div><div class="slip-acts">'+
+          '<button class="edt" data-edit="'+r.no+'">تعديل</button>'+
+          '<button class="del" data-no="'+r.no+'">حذف</button>'+
+        '</div></article>';
+  }
+
+  function bindSlips(s){
+    $("list").querySelectorAll(".del").forEach(function(b){
+      b.addEventListener("click", function(){
+        var no=+b.dataset.no;
+        var r=s.records.find(function(x){ return x.no===no; });
+        ask("حذف القسيمة","هل تريد حذف قسيمة رقم "+String(no).padStart(3,"0")+
+            (r? " (سيارة "+r.plate+")" : "")+" نهائياً؟", function(){
+          var i=s.records.findIndex(function(x){ return x.no===no; });
+          if(i>-1){ s.records.splice(i,1); if(editNo===no) endEdit(); persist(); render(); toast("تم حذف القسيمة."); }
+        });
+      });
+    });
+    $("list").querySelectorAll(".edt").forEach(function(b){
+      b.addEventListener("click", function(){ startEdit(+b.dataset.edit); });
+    });
+  }
+
+  /* ---- التصدير ---- */
+  function stamp(){ var d=new Date();
+    return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+"-"+pad(d.getHours())+pad(d.getMinutes()); }
+  function b64(u8){
+    var s="", CH=0x8000;
+    for(var i=0;i<u8.length;i+=CH){ s += String.fromCharCode.apply(null, u8.subarray(i,i+CH)); }
+    return btoa(s);
+  }
+  function browserSave(data, type, name){
+    var blob=new Blob([data],{type:type}), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); },1500);
+  }
+  async function saveAndShare(u8, name){
+    var C = window.Capacitor;
+    var native = C && ((C.isNativePlatform && C.isNativePlatform()) || C.isNative);
+    var P = C && C.Plugins;
+    if(native && P && P.Filesystem){
+      var data = b64(u8), res = null, used = "", dirs = ["CACHE","EXTERNAL","DATA","DOCUMENTS"];
+      for(var k=0;k<dirs.length;k++){
+        try {
+          res = await P.Filesystem.writeFile({ path:name, data:data, directory:dirs[k], recursive:true });
+          used = dirs[k]; break;
+        } catch(e){ res = null; }
+      }
+      if(!res || !res.uri){ toast("تعذّر إنشاء الملف على الجهاز."); return; }
+
+      /* نسخة إضافية في مجلد المستندات إن أمكن */
+      if(used!=="DOCUMENTS"){
+        try { await P.Filesystem.writeFile({ path:name, data:data, directory:"DOCUMENTS", recursive:true }); }
+        catch(e){}
+      }
+
+      if(P.Share){
+        try {
+          var can = true;
+          if(P.Share.canShare){ var c = await P.Share.canShare(); can = !!(c && c.value); }
+          if(can){
+            await P.Share.share({ title:"سجل الميناء", text:name, url:res.uri, dialogTitle:"احفظ الملف أو أرسله" });
+            return;
+          }
+        } catch(e){
+          if(String(e && e.message||"").indexOf("cancel")>-1) return;
+        }
+      }
+      toast("تم حفظ الملف باسم "+name+" في مجلد Documents.");
+      return;
+    }
+    browserSave(u8, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", name);
+    toast("تم إنشاء ملف Excel منسّق.");
+  }
+  /* حفظ ومشاركة عدة ملفات دفعة واحدة */
+  async function saveAndShareMany(files){
+    var C = window.Capacitor;
+    var native = C && ((C.isNativePlatform && C.isNativePlatform()) || C.isNative);
+    var P = C && C.Plugins;
+    if(native && P && P.Filesystem){
+      var uris = [], dirs = ["CACHE","EXTERNAL","DATA","DOCUMENTS"];
+      for(var i=0;i<files.length;i++){
+        var data = b64(files[i].u8), res = null, used = "";
+        for(var k=0;k<dirs.length;k++){
+          try { res = await P.Filesystem.writeFile({ path:files[i].name, data:data, directory:dirs[k], recursive:true }); used = dirs[k]; break; }
+          catch(e){ res = null; }
+        }
+        if(res && res.uri) uris.push(res.uri);
+        if(res && used!=="DOCUMENTS"){
+          try { await P.Filesystem.writeFile({ path:files[i].name, data:data, directory:"DOCUMENTS", recursive:true }); } catch(e){}
+        }
+      }
+      if(!uris.length){ toast("تعذّر إنشاء الملفات على الجهاز."); return; }
+      if(P.Share){
+        try {
+          await P.Share.share({ title:"سجل الميناء", text:files.length+" ملف Excel", files:uris, dialogTitle:"احفظ الملفات أو أرسلها" });
+          return;
+        } catch(e){
+          if(String(e && e.message||"").indexOf("cancel")>-1) return;
+          try { await P.Share.share({ title:"سجل الميناء", url:uris[0], dialogTitle:"احفظ الملف أو أرسله" }); return; } catch(e2){}
+        }
+      }
+      toast("تم حفظ "+uris.length+" ملف في مجلد Documents.");
+      return;
+    }
+    files.forEach(function(f,i){
+      setTimeout(function(){ browserSave(f.u8, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", f.name); }, i*500);
+    });
+    toast("تم إنشاء "+files.length+" ملف Excel.");
+  }
+
+  /* ---- ملفات Excel: ملف لكل نوع (منسّق وواضح) ---- */
+  function typeOf(r){ return (r.cargo||"بدون نوع").trim() || "بدون نوع"; }
+  function colL(n){ var s=""; while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26);} return s; }
+  function colsFor(dock){
+    return dock
+      ? { head:["م","التاريخ","رقم السيارة","نوع الشحنة","اسم السائق","الوقت"], widths:[10,18,22,24,30,16],
+          row:function(r,st,n){ return [n, dmy(r.date||st.date), r.plate, r.cargo, r.driver||"—", r.arrive||""]; } }
+      : { head:["م","التاريخ","رقم السيارة","نوع الشحنة","اسم السائق","موعد الوصول","الوزن (كجم)"], widths:[10,18,22,24,30,18,22],
+          row:function(r,st,n){ return [n, dmy(r.date||st.date), r.plate, r.cargo, r.driver||"—", r.arrive||"", {v:Number(r.weight)||0,s:5}]; } };
+  }
+  function xlText(c){ return String(c && typeof c==="object" ? (c.v==null?"":c.v) : (c==null?"":c)); }
+  function xlLines(txt, w){ return Math.max(1, Math.ceil(xlText(txt).length*1.3/Math.max(w,1))); }
+  /* بنّاء ورقة: عنوان، أزواج (اسم/قيمة) مدمجة، جدول، إجمالي — مع ارتفاع صفوف تلقائي */
+  function XB(widths){
+    var rows=[], merges=[], W=widths.length, C=function(v,s){ return {v:v,s:s}; };
+    function put(cells, ht){ cells.ht = ht; rows.push(cells); return rows.length; }
+    var valW = 0; for(var i=2;i<W;i++) valW += widths[i];
+    return {
+      W:W,
+      title:function(t){
+        var r=rows.length+1, a=[C(t,1)]; for(var i=1;i<W;i++) a.push(C("",1));
+        put(a, 36); merges.push("A"+r+":"+colL(W)+r);
+      },
+      blank:function(){ rows.push([]); },
+      kv:function(label, value){
+        var r=rows.length+1, a=[C(label,2), C("",2)];
+        a.push(value && typeof value==="object" ? value : C(value,0));
+        for(var i=3;i<W;i++) a.push(C("",0));
+        put(a, Math.max(26, 22*xlLines(value, valW)+6));
+        merges.push("A"+r+":B"+r); merges.push("C"+r+":"+colL(W)+r);
+      },
+      head:function(arr){ put(arr.map(function(h){ return C(h,3); }), 32); },
+      row:function(arr){
+        var l=1; arr.forEach(function(c,i){ l=Math.max(l, xlLines(c, widths[i]||12)); });
+        put(arr, Math.max(26, 22*l+6));
+      },
+      total:function(label, countText, weight){
+        var r=rows.length+1, a=[]; for(var i=0;i<W;i++) a.push(C("",4));
+        a[0]=C(label,4); merges.push("A"+r+":B"+r);
+        if(weight==null){ a[W-1]=C(countText,4); } else { a[W-2]=C(countText,4); a[W-1]=C(weight,4); }
+        put(a, 30);
+      },
+      sheet:function(name){
+        var tw=0; widths.forEach(function(w){ tw+=w; });
+        return { name:name, rows:rows, widths:widths, merges:merges, landscape: tw>95 };
+      }
+    };
+  }
+  function dateSpan(recs, st){
+    var ds=[]; recs.forEach(function(r){ var d=r.date||st.date; if(d && ds.indexOf(d)<0) ds.push(d); });
+    ds.sort();
+    if(!ds.length) return dmy(st.date);
+    return ds.length===1 ? dmy(ds[0]) : "من "+dmy(ds[0])+" إلى "+dmy(ds[ds.length-1]);
+  }
+  function typeSheet(st, sh, recs, dock, type){
+    var cf=colsFor(dock), b=XB(cf.widths);
+    b.title((dock?"سجل الرصيف":"سجل تفريغ الباخرة")+" — "+type);
+    b.blank();
+    b.kv("اسم الباخرة", st.ship||"—"); b.kv("الشركة", st.company||"—"); b.kv("التاريخ", dateSpan(recs, st));
+    b.kv("اسم الموظف", sh.staff||"—"); b.kv("فترة الدوام", sh.shift); b.kv("بدء الدوام", sh.start||"—");
+    b.kv("انتهاء الدوام", sh.end||"لم يُسجَّل بعد");
+    if(!dock && st.shipWeight) b.kv("وزن الباخرة الإجمالي (كجم)", {v:Number(st.shipWeight)||0,s:5});
+    b.kv("نوع الشحنة", type);
+    b.blank();
+    b.head(cf.head);
+    recs.slice().sort(function(a,b2){ return a.no-b2.no; }).forEach(function(r,i){ b.row(cf.row(r,st,i+1)); });
+    var t=recs.reduce(function(a,r){ return a+(Number(r.weight)||0); },0);
+    b.total("إجمالي الورقة", "عدد الشاحنات: "+recs.length, dock ? null : t);
+    if(dock && sh.notes && sh.notes.trim()){ b.blank(); b.kv("ملاحظات", sh.notes.trim()); }
+    return b.sheet(sheetTitle(sh));
+  }
+  /* ملف لكل نوع لهذه الورقة فقط (ترقيم السيارات متسلسل داخل كل ملف) */
+  function buildTypeFiles(st, dock, only, sh){
+    var types=[];
+    sh.records.forEach(function(r){ var k=typeOf(r); if(types.indexOf(k)<0) types.push(k); });
+    if(only) types = types.filter(function(t){ return t===only; });
+    return types.map(function(t){
+      var recs = sh.records.filter(function(r){ return typeOf(r)===t; });
+      var staff = (sh.staff||"ورقة").replace(/[\\\/:*?"<>|]/g,"-");
+      var fname = "سجل-"+t.replace(/[\\\/:*?"<>|]/g,"-")+"-"+staff+"-"+stamp()+".xlsx";
+      return { name:fname, u8:XLSX_MINI.build([ typeSheet(st, sh, recs, dock, t) ]) };
+    });
+  }
+  function exportType(t){
+    var files = buildTypeFiles(state, isDock(), t, sheet());
+    if(!files.length){ toast("لا توجد بيانات لهذا النوع في هذه الورقة."); return; }
+    saveAndShareMany(files);
+  }
+
+  /* =====================  لوحة المدير  ===================== */
+  var adData = { ms:null, rs:null }, adSec = "dock", adDate = "all", adShip = "", adShipTab = "wh", shDate = "all", adStaff = "all", adShipStaff = "all";
+
+  function norm(st){
+    st = st || blankState();
+    if(!Array.isArray(st.sheets)) st.sheets = [];
+    if(!Array.isArray(st.cargos)) st.cargos = [];
+    if(!Array.isArray(st.archive)) st.archive = [];
+    function fix(o){ o.sheets = Array.isArray(o.sheets) ? o.sheets : []; o.sheets.forEach(function(sh){ if(!Array.isArray(sh.records)) sh.records = []; }); }
+    fix(st); st.archive.forEach(fix);
+    return st;
+  }
+  function shipKey(n){ return String(n||"").replace(/\s+/g," ").trim().toLowerCase(); }
+  /* «مدخلة» = باخرة واحدة لمستخدم واحد: الحالية (c) أو مؤرشفة (رقمها) */
+  function entriesOf(u){
+    var st=adData[u], out=[];
+    var has = (st.ship||"").trim() || st.sheets.some(function(sh){ return sh.records.length; });
+    if(has) out.push({ u:u, st:st, obj:st, sa:"c" });
+    st.archive.forEach(function(a,i){ out.push({ u:u, st:st, obj:a, sa:String(i) }); });
+    return out;
+  }
+  function recDate(r,obj){ return r.date || obj.date || ""; }
+  function dayOk(r,obj,date){ return date==="all" || recDate(r,obj)===date; }
+  function eRecs(e,date){
+    var out=[]; e.obj.sheets.forEach(function(sh){ sh.records.forEach(function(r){ if(dayOk(r,e.obj,date)) out.push(r); }); });
+    return out;
+  }
+  function datesOf(list){
+    var set={};
+    list.forEach(function(e){ e.obj.sheets.forEach(function(sh){ sh.records.forEach(function(r){ var d=recDate(r,e.obj); if(d) set[d]=1; }); }); });
+    return Object.keys(set).sort().reverse();
+  }
+  function sumW(recs){ return recs.reduce(function(a,r){ return a+(Number(r.weight)||0); },0); }
+  function dateSelect(ds, cur, attr){
+    return '<select '+attr+' aria-label="التاريخ"><option value="all"'+(cur==="all"?" selected":"")+'>كل التواريخ</option>'+
+      ds.map(function(d){ return '<option value="'+d+'"'+(cur===d?" selected":"")+'>'+dmy(d)+'</option>'; }).join("")+'</select>';
+  }
+
+  async function loadAdmin(){
+    adData.ms = norm(await store.load("ms"));
+    adData.rs = norm(await store.load("rs"));
+    var ds = datesOf(entriesOf("ms").concat(entriesOf("rs")));
+    if(adDate!=="all" && ds.indexOf(adDate)<0) adDate = "all";
+    renderAdmin();
+  }
+  function adSave(u){ return store.save(adData[u], u); }
+
+  /* ----- الموظفون: فلترة وتفاصيل ----- */
+  function staffKey(u,name){ return u+"|"+String(name||"").replace(/\s+/g," ").trim().toLowerCase(); }
+  function staffOpts(entries){
+    var seen={}, out=[];
+    entries.forEach(function(e){ e.obj.sheets.forEach(function(sh){
+      var n=(sh.staff||"").trim(); if(!n) return;
+      var k=staffKey(e.u,n); if(!seen[k]){ seen[k]=1; out.push({ key:k, name:n, u:e.u }); } }); });
+    out.sort(function(a,b){ return a.name.localeCompare(b.name,"ar"); });
+    return out;
+  }
+  function staffSelect(opts, cur, attr, withSec){
+    return '<select '+attr+' aria-label="الموظف"><option value="all">كل الموظفين</option>'+
+      opts.map(function(o){ return '<option value="'+esc(o.key)+'"'+(o.key===cur?' selected':'')+'>'+esc(o.name)+
+        (withSec?' — '+(o.u==="rs"?"الرصيف":"المستودع"):'')+'</option>'; }).join("")+'</select>';
+  }
+  function staffData(key, date, only){
+    var S=null;
+    ["ms","rs"].forEach(function(u){ entriesOf(u).forEach(function(e){
+      if(only && !only.some(function(x){ return x.obj===e.obj; })) return;
+      e.obj.sheets.forEach(function(sh){
+        var n=(sh.staff||"").trim(); if(!n || staffKey(u,n)!==key) return;
+        S = S || { name:n, u:u, sec:u==="rs"?"الرصيف":"المستودع", days:{}, cars:0, weight:0, types:{}, rows:[] };
+        var by={};
+        sh.records.forEach(function(r){ if(!dayOk(r,e.obj,date)) return; var d=recDate(r,e.obj)||"—"; (by[d]=by[d]||[]).push(r); });
+        Object.keys(by).forEach(function(d){
+          var rr=by[d], w=sumW(rr);
+          S.days[d]=1; S.cars+=rr.length; S.weight+=w;
+          rr.forEach(function(r){ var t=typeOf(r); S.types[t]=(S.types[t]||0)+1; });
+          S.rows.push({ date:d, ship:(e.obj.ship||"").trim()||"—", shift:sh.shift, start:sh.start||"", end:sh.end||"", n:rr.length, w:w });
+        });
+      }); }); });
+    if(S) S.rows.sort(function(a,b){ return a.date<b.date?1:a.date>b.date?-1:0; });
+    return S;
+  }
+  function adStaffCard(S){
+    if(!S || !S.rows.length) return '<div class="empty" style="margin:14px 0"><p>لا توجد بيانات لهذا الموظف في التاريخ المحدّد.</p></div>';
+    var dock = S.u==="rs", nd = Object.keys(S.days).length;
+    var h = '<div class="adsub">تفاصيل الموظف: '+esc(S.name)+' — '+S.sec+'</div>'+
+      '<div class="totals"><div class="stat"><b class="mono">'+num(nd)+'</b><small>أيام العمل</small></div>'+
+      '<div class="stat gold"><b class="mono">'+num(S.cars)+'</b><small>السيارات</small></div>'+
+      (dock ? '' : '<div class="stat"><b class="mono">'+num(S.weight)+'</b><small>الوزن (كجم)</small></div>')+'</div>';
+    h += '<div class="chipsrow">'+Object.keys(S.types).map(function(t){ return '<i>'+esc(t)+' <b class="mono">'+num(S.types[t])+'</b></i>'; }).join("")+'</div>';
+    h += '<div class="cargo-box"><div class="tblwrap"><table class="rt"><tr><th>التاريخ</th><th>الباخرة</th><th>الدوام</th><th>البدء</th><th>الانتهاء</th><th>سيارات</th>'+(dock?'':'<th>الوزن</th>')+'</tr>'+
+      S.rows.map(function(r){ return '<tr><td class="mono">'+(r.date==="—"?"—":dmy(r.date))+'</td><td>'+esc(r.ship)+'</td><td>'+esc(r.shift)+'</td><td class="mono">'+esc(r.start||"—")+
+        '</td><td class="mono">'+esc(r.end||"—")+'</td><td class="mono">'+num(r.n)+'</td>'+(dock?'':'<td class="mono">'+num(r.w)+'</td>')+'</tr>'; }).join("")+
+      '</table></div></div>';
+    return h;
+  }
+  function adStaffPage(){
+    var opts=staffOpts(entriesOf("ms").concat(entriesOf("rs")));
+    if(adStaff!=="all" && !opts.some(function(o){ return o.key===adStaff; })) adStaff="all";
+    if(adStaff!=="all") return adStaffCard(staffData(adStaff, adDate));
+    var rows = opts.map(function(o){ return { o:o, S:staffData(o.key, adDate) }; }).filter(function(x){ return x.S && x.S.cars>0; });
+    if(!rows.length) return '<div class="empty" style="margin-top:16px"><b>لا يوجد موظفون</b><p>لا توجد سجلات في التاريخ المحدّد.</p></div>';
+    return '<div class="adsub">الموظفون ('+rows.length+') — اضغط على الاسم لعرض تفاصيله</div><div class="cargo-box"><div class="tblwrap"><table class="rt">'+
+      '<tr><th>الموظف</th><th>القسم</th><th>أيام العمل</th><th>السيارات</th><th>الوزن</th></tr>'+
+      rows.map(function(x){ var S=x.S;
+        return '<tr><td><button class="linkbtn" data-staffrow="'+esc(x.o.key)+'">'+esc(S.name)+'</button></td><td>'+S.sec+'</td><td class="mono">'+num(Object.keys(S.days).length)+
+               '</td><td class="mono">'+num(S.cars)+'</td><td class="mono">'+(S.u==="rs"?"—":num(S.weight))+'</td></tr>'; }).join("")+
+      '</table></div></div>';
+  }
+
+  /* ----- دولاب القيادة: تقرير تفاعلي لكل باخرة ----- */
+  var helmSel = 0, helmRot = 0, helmDrag = null, helmSuppress = false;
+  function shipStaffList(sh, date){
+    var m={}, o=[];
+    [["ms","المستودع"],["rs","الرصيف"]].forEach(function(pr){
+      sh[pr[0]].forEach(function(e){ e.obj.sheets.forEach(function(s){
+        var n=(s.staff||"").trim(); if(!n) return;
+        s.records.forEach(function(r){
+          var d=recDate(r,e.obj); if(date!=="all" && d && d>date) return;
+          var k=pr[0]+"|"+n; if(!m[k]){ m[k]={name:n,sec:pr[1],days:{},hit:false}; o.push(k); }
+          if(d) m[k].days[d]=1; if(dayOk(r,e.obj,date)) m[k].hit=true; }); }); });
+    });
+    return o.map(function(k){ return m[k]; }).filter(function(x){ return x.hit; });
+  }
+  function helmItems(sh, date){
+    var f=shipFig(sh,date), wh=f.wh.length, dk=f.dk.length, tm={}, tn=[];
+    f.wh.concat(f.dk).forEach(function(r){ var k=typeOf(r); if(!tm[k]){ tm[k]={name:k,c:0,w:0}; tn.push(k); } tm[k].c++; tm[k].w+=(Number(r.weight)||0); });
+    var staff = shipStaffList(sh,date), has=f.shipW>0;
+    return [
+      { t:"إجمالي السيارات", v:num(wh+dk), u:"سيارة", note:"المستودع "+num(wh)+" · الرصيف "+num(dk) },
+      { t:"سيارات المستودع", v:num(wh), u:"سيارة", note:"وزنها "+num(sumW(f.wh))+" كجم" },
+      { t:"سيارات الرصيف", v:num(dk), u:"سيارة" },
+      { t:"وزن الباخرة", v:has?num(f.shipW):"—", u:has?"كجم":"", note:has?"":"لم يُدخل وزن الباخرة بعد" },
+      { t:"المُفرَّغ", v:num(f.unl), u:"كجم", bar:has?f.unl/f.shipW:null },
+      { t:"المتبقي", v:has?num(f.rem):"—", u:has?"كجم":"", bar:has?Math.max(0,f.rem)/f.shipW:null, warn:has&&f.rem<0 },
+      { t:"الأنواع", v:num(tn.length), u:"نوع", list:tn.map(function(k){ return [tm[k].name, num(tm[k].c)+" سيارة"+(tm[k].w?" · "+num(tm[k].w)+" كجم":"")]; }) },
+      { t:"الموظفون", v:num(staff.length), u:"موظف", list:staff.map(function(x){ return [x.name+" — "+x.sec, num(Math.max(1,Object.keys(x.days).length))+" يوم"]; }) }
+    ];
+  }
+  function helmDetail(it){
+    var h='<div class="hd-top"><span class="hd-t">'+esc(it.t)+'</span><span class="hd-v mono">'+esc(it.v)+(it.u?' <i>'+esc(it.u)+'</i>':'')+'</span></div>';
+    if(it.note) h+='<div class="hd-n">'+esc(it.note)+'</div>';
+    if(it.bar!=null){ var p=Math.round(Math.min(1,it.bar)*100);
+      h+='<div class="hd-bar'+(it.warn?' warn':'')+'"><i style="width:'+p+'%"></i></div><div class="hd-n">'+p+'% من وزن الباخرة</div>'; }
+    if(it.warn) h+='<div class="hd-n" style="color:#FF9A9A">المُفرَّغ يتجاوز وزن الباخرة المُدخل — راجع الأوزان.</div>';
+    if(it.list) h+= it.list.length ? it.list.map(function(r){ return '<div class="hd-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>'; }).join("") : '<div class="hd-n">لا بيانات</div>';
+    return h;
+  }
+  function adHelm(sh, date){
+    var items=helmItems(sh,date), it=items[helmSel], spokes="", handles="";
+    for(var i=0;i<8;i++){
+      var a=i*Math.PI/4, x=(130+108*Math.sin(a)).toFixed(1), y=(130-108*Math.cos(a)).toFixed(1);
+      spokes += '<line x1="130" y1="130" x2="'+x+'" y2="'+y+'" stroke="#A9722C" stroke-width="7" stroke-linecap="round"/>';
+      handles += '<g class="hh'+(i===helmSel?' sel':'')+'" data-hi="'+i+'"><circle cx="'+x+'" cy="'+y+'" r="11"/><circle cx="'+x+'" cy="'+y+'" r="3.2" fill="#7A4A0C"/></g>';
+    }
+    var vs = it.v.length>7 ? 14 : it.v.length>5 ? 17 : 21;
+    return '<div class="helmwrap"><div class="helmtitle">دولاب القيادة — تقرير الباخرة</div>'+
+      '<svg class="helm" id="helmSvg" viewBox="0 0 260 260" role="group" aria-label="دولاب قيادة تفاعلي لتقرير الباخرة">'+
+        '<g id="helmRot" style="transform:rotate('+helmRot+'deg)">'+
+          '<circle cx="130" cy="130" r="86" fill="none" stroke="#8B5A2B" stroke-width="13"/>'+
+          '<circle cx="130" cy="130" r="86" fill="none" stroke="#C98A1B" stroke-width="2" opacity=".7"/>'+
+          '<circle cx="130" cy="130" r="48" fill="none" stroke="#8B5A2B" stroke-width="8"/>'+spokes+handles+
+        '</g>'+
+        '<circle cx="130" cy="130" r="40" fill="#0E1B2A" stroke="#F4A81D" stroke-width="3"/>'+
+        '<text id="helmHubT" x="130" y="122" text-anchor="middle" font-size="10.5" fill="#9DB2C4">'+esc(it.t)+'</text>'+
+        '<text id="helmHubV" x="130" y="'+(144+(vs<17?-2:0))+'" text-anchor="middle" font-size="'+vs+'" font-weight="700" fill="#fff">'+esc(it.v)+'</text>'+
+        '<path d="M120 2 L140 2 L130 20 Z" fill="#F4A81D" stroke="#0E1B2A" stroke-width="1.5"/>'+
+      '</svg>'+
+      '<div class="helmhint">أدِر الدولاب بإصبعك، أو اضغط على أحد المقابض</div>'+
+      '<div class="helmchips">'+items.map(function(x,i){ return '<button class="hchip'+(i===helmSel?' on':'')+'" data-hi="'+i+'">'+esc(x.t)+'</button>'; }).join("")+'</div>'+
+      '<div id="helmDetail">'+helmDetail(it)+'</div></div>';
+  }
+  function curShip(){ return adShips().filter(function(x){ return x.key===adShip; })[0]; }
+  function setHelmRot(){ var g=$("helmRot"); if(g) g.style.transform="rotate("+helmRot+"deg)"; }
+  function helmUpdate(){
+    var sh=curShip(); if(!sh || !$("helmSvg")) return;
+    var items=helmItems(sh,shDate), it=items[helmSel];
+    $("helmHubT").textContent=it.t; $("helmHubV").textContent=it.v;
+    var vs = it.v.length>7 ? 14 : it.v.length>5 ? 17 : 21;
+    $("helmHubV").setAttribute("font-size", vs); $("helmHubV").setAttribute("y", vs<17?142:144);
+    $("helmDetail").innerHTML = helmDetail(it);
+    $("adBody").querySelectorAll(".hh").forEach(function(g){ g.classList.toggle("sel", +g.dataset.hi===helmSel); });
+    $("adBody").querySelectorAll(".hchip").forEach(function(c){ c.classList.toggle("on", +c.dataset.hi===helmSel); });
+  }
+  function helmTarget(i){ return -i*45 + 360*Math.round((helmRot+i*45)/360); }
+  function helmSelect(i){ helmSel=i; helmRot=helmTarget(i); setHelmRot(); helmUpdate(); tickSound(); }
+  function angleAt(e, c){ return Math.atan2(e.clientX-c.cx, -(e.clientY-c.cy))*180/Math.PI; }
+  function helmMove(e){
+    if(!helmDrag) return;
+    var a=angleAt(e,helmDrag), d=a-helmDrag.prev;
+    while(d>180) d-=360; while(d<-180) d+=360;
+    helmDrag.prev=a; helmDrag.moved+=Math.abs(d); helmRot+=d; setHelmRot();
+    var idx=Math.round(-helmRot/45); if(idx!==helmDrag.tick){ helmDrag.tick=idx; tickSound(); }
+  }
+  function helmUp(){
+    window.removeEventListener("pointermove",helmMove); window.removeEventListener("pointerup",helmUp); window.removeEventListener("pointercancel",helmUp);
+    if(!helmDrag) return;
+    var moved=helmDrag.moved, svg=$("helmSvg"); helmDrag=null;
+    if(svg) svg.classList.remove("drag");
+    if(moved>6){
+      var idx=(((Math.round(-helmRot/45))%8)+8)%8;
+      helmSel=idx; helmRot=helmTarget(idx); setHelmRot(); helmUpdate();
+      helmSuppress=true; setTimeout(function(){ helmSuppress=false; },90);
+    }
+  }
+  $("adBody").addEventListener("pointerdown", function(e){
+    var svg = e.target.closest ? e.target.closest("#helmSvg") : null; if(!svg) return;
+    var rc=svg.getBoundingClientRect(), c={ cx:rc.left+rc.width/2, cy:rc.top+rc.height/2 };
+    helmDrag={ cx:c.cx, cy:c.cy, prev:angleAt(e,c), moved:0, tick:Math.round(-helmRot/45) };
+    svg.classList.add("drag");
+    window.addEventListener("pointermove",helmMove); window.addEventListener("pointerup",helmUp); window.addEventListener("pointercancel",helmUp);
+  });
+
+  /* ----- بيانات الباخرة (قابلة للتعديل) ----- */
+  function adInfoBlock(e){
+    var o=e.obj, dock = e.u==="rs";
+    function fld(label,key,val,ltr){
+      return '<div><label>'+label+'</label><input data-su="'+e.u+'" data-sa="'+e.sa+'" data-sk="'+key+'" value="'+esc(val==null?"":val)+'"'+(ltr?' class="mono ltr" inputmode="decimal"':'')+'></div>';
+    }
+    return '<div class="cargo-box"><h3>بيانات الباخرة'+(e.sa==="c"?'':' <span style="font-size:11.5px;color:var(--ink-soft)">(مؤرشفة)</span>')+'</h3><div class="adinfo">'+
+      fld("اسم الباخرة","ship",o.ship)+fld("الشركة","company",o.company)+
+      (dock ? "" : fld("وزن الباخرة الإجمالي (كجم)","shipWeight",o.shipWeight,true))+'</div></div>';
+  }
+
+  /* ----- تفاصيل قسم (مستودع / رصيف) لقائمة مدخلات وتاريخ ----- */
+  function adDetail(u, entries, date, sf){
+    sf = sf || "all";
+    var dock = u==="rs";
+    var per = entries.map(function(e){
+      return { e:e, blocks: e.obj.sheets.filter(function(sh){ return sf==="all" || staffKey(u,sh.staff)===sf; }).map(function(sh){
+        return { sh:sh, recs: sh.records.filter(function(r){ return dayOk(r,e.obj,date); }) };
+      }).filter(function(x){ return x.recs.length; }) };
+    });
+    var all=[]; per.forEach(function(p){ p.blocks.forEach(function(b){ all = all.concat(b.recs); }); });
+    var h = '<div class="totals"><div class="stat"><b class="mono">'+num(all.length)+'</b><small>إجمالي السيارات</small></div>'+
+      (dock ? '<div class="stat gold"><b class="mono">'+num(per.reduce(function(a,p){ return a+p.blocks.length; },0))+'</b><small>أوراق الموظفين</small></div>'
+            : '<div class="stat gold"><b class="mono">'+num(sumW(all))+'</b><small>إجمالي الوزن (كجم)</small></div>')+'</div>';
+    if(!entries.length) return h + '<div class="empty" style="margin-top:16px"><b>لا توجد بيانات</b><p>لم يسجّل هذا القسم أي باخرة بعد.</p></div>';
+    if(sf!=="all") h += adStaffCard(staffData(sf, date, entries));
+    per.forEach(function(p){
+      var e=p.e;
+      h += adInfoBlock(e);
+      if(!p.blocks.length){ h += '<div class="empty" style="margin-bottom:14px"><p>لا شاحنات مسجّلة لهذه الباخرة في التاريخ المحدّد.</p></div>'; return; }
+      p.blocks.forEach(function(x){
+        var sh=x.sh;
+        h += '<div class="cargo-box"><h3>'+esc(sh.staff||"بدون اسم")+' · '+esc(sh.shift)+' · بدء '+esc(sh.start||"")+(sh.end?' · انتهاء '+esc(sh.end):'')+
+             ' <span style="font-size:12px;color:var(--ink-soft);font-weight:600">· '+num(x.recs.length)+' شاحنة'+(dock?'':' · '+num(sumW(x.recs))+' كجم')+'</span></h3>'+
+             trTable(x.recs,{dock:dock,showType:true,admin:true,u:u,sa:e.sa,sid:sh.id})+
+             (dock && sh.notes && sh.notes.trim() ? '<div class="adnote"><b>ملاحظات:</b> '+esc(sh.notes.trim())+'</div>' : '')+'</div>';
+      });
+    });
+    return h;
+  }
+
+  /* ----- البواخر ----- */
+  function adShips(){
+    var map={}, order=[];
+    ["ms","rs"].forEach(function(u){
+      entriesOf(u).forEach(function(e){
+        var k = shipKey(e.obj.ship) || "__none";
+        if(!map[k]){ map[k] = { key:k, name:(e.obj.ship||"").trim()||"باخرة بدون اسم", company:"", ms:[], rs:[] }; order.push(k); }
+        map[k][u].push(e);
+        if(!map[k].company && e.obj.company) map[k].company = e.obj.company;
+      });
+    });
+    var list = order.map(function(k){ return map[k]; });
+    list.forEach(function(sh){ var d=datesOf(sh.ms.concat(sh.rs)); sh.last = d[0]||""; });
+    list.sort(function(a,b){ return a.last<b.last ? 1 : a.last>b.last ? -1 : 0; });
+    return list;
+  }
+  function shipFig(sh, date){
+    var wh=[], dk=[], shipW=0, unl=0;
+    sh.ms.forEach(function(e){
+      wh = wh.concat(eRecs(e,date));
+      shipW = Math.max(shipW, Number(e.obj.shipWeight)||0);
+      e.obj.sheets.forEach(function(s){ s.records.forEach(function(r){
+        var d=recDate(r,e.obj); if(date==="all" || !d || d<=date) unl += (Number(r.weight)||0); }); });
+    });
+    sh.rs.forEach(function(e){ dk = dk.concat(eRecs(e,date)); });
+    return { wh:wh, dk:dk, shipW:shipW, unl:unl, rem:shipW-unl };
+  }
+  function adShipsList(){
+    var list = adShips();
+    if(!list.length) return '<div class="empty" style="margin-top:16px"><b>لا توجد بواخر مسجّلة</b><p>ستظهر هنا كل باخرة يسجّلها موظفو المستودع أو الرصيف.</p></div>';
+    return '<div class="adsub">البواخر المسجّلة ('+list.length+')</div>'+list.map(function(sh){
+      var f=shipFig(sh,"all");
+      return '<button class="shipcard" data-ship="'+esc(sh.key)+'"><span class="sn">'+esc(sh.name)+'</span>'+
+        '<span class="sc">'+esc(sh.company||"—")+(sh.last?' · آخر تسجيل '+dmy(sh.last):'')+'</span>'+
+        '<span class="sx"><i>مستودع <b class="mono">'+num(f.wh.length)+'</b></i><i>رصيف <b class="mono">'+num(f.dk.length)+'</b></i>'+
+        (f.shipW>0 ? '<i>المتبقي <b class="mono">'+num(f.rem)+'</b></i>' : '')+'</span></button>';
+    }).join("");
+  }
+  function adShipReport(sh, date){
+    var f=shipFig(sh,date), h="";
+    h += '<div class="totals"><div class="stat gold"><b class="mono">'+num(f.wh.length+f.dk.length)+'</b><small>إجمالي السيارات</small></div>'+
+         '<div class="stat"><b class="mono">'+num(f.wh.length)+'</b><small>المستودع</small></div>'+
+         '<div class="stat"><b class="mono">'+num(f.dk.length)+'</b><small>الرصيف</small></div></div>';
+    h += '<div class="adsub">وزن الباخرة</div><div class="cargo-box">';
+    if(date!=="all") h += '<div class="cargo-row"><span class="nm">وزن هذا اليوم</span><span class="wt mono">'+num(sumW(f.wh))+'</span></div>';
+    if(f.shipW>0){
+      h += '<div class="cargo-row"><span class="nm">وزن الباخرة الإجمالي</span><span class="wt mono">'+num(f.shipW)+'</span></div>'+
+           '<div class="cargo-row"><span class="nm">المُفرَّغ'+(date==="all"?'':' حتى هذا التاريخ')+'</span><span class="wt mono">'+num(f.unl)+'</span></div>'+
+           '<div class="cargo-row rem"><span class="nm">الوزن المتبقي بالباخرة</span><span class="wt mono" style="color:'+(f.rem<0?'var(--alert)':'#1F6E58')+'">'+num(f.rem)+'</span></div>';
+    } else {
+      h += '<div class="cargo-row"><span class="nm">لم يُدخل وزن الباخرة الإجمالي بعد (يُدخل من حساب المستودع أو من تفاصيل المستودع).</span></div>';
+    }
+    h += '</div>';
+    var map={}, order=[];
+    function slot(k){ if(!map[k]){ map[k]={name:k,wc:0,ww:0,dc:0}; order.push(k); } return map[k]; }
+    f.wh.forEach(function(r){ var m=slot(typeOf(r)); m.wc++; m.ww+=(Number(r.weight)||0); });
+    f.dk.forEach(function(r){ slot(typeOf(r)).dc++; });
+    order.sort(function(a,b){ return map[b].ww-map[a].ww; });
+    h += '<div class="adsub">أوزان كل نوع</div><div class="cargo-box"><div class="tblwrap"><table class="rt"><tr><th>النوع</th><th>سيارات المستودع</th><th>الوزن (كجم)</th><th>سيارات الرصيف</th></tr>'+
+      (order.length ? order.map(function(k){ var m=map[k];
+        return '<tr><td>'+esc(m.name)+'</td><td class="mono">'+num(m.wc)+'</td><td class="mono">'+num(m.ww)+'</td><td class="mono">'+num(m.dc)+'</td></tr>'; }).join("")
+        : '<tr><td colspan="4">لا بيانات</td></tr>')+'</table></div></div>';
+    var staff={}, so=[];
+    [["ms","المستودع"],["rs","الرصيف"]].forEach(function(pr){
+      sh[pr[0]].forEach(function(e){
+        e.obj.sheets.forEach(function(s){
+          var name=(s.staff||"").trim(); if(!name) return;
+          var key=pr[0]+"|"+name;
+          s.records.forEach(function(r){
+            var d=recDate(r,e.obj);
+            if(date!=="all" && d && d>date) return;
+            if(!staff[key]){ staff[key]={name:name,sec:pr[1],days:{},hit:false}; so.push(key); }
+            if(d) staff[key].days[d]=1;
+            if(dayOk(r,e.obj,date)) staff[key].hit=true;
+          });
+        });
+      });
+    });
+    so = so.filter(function(k){ return staff[k].hit; });
+    h += '<div class="adsub">الموظفون وعدد أيام العمل</div><div class="cargo-box"><div class="tblwrap"><table class="rt"><tr><th>الموظف</th><th>القسم</th><th>أيام العمل</th></tr>'+
+      (so.length ? so.map(function(k){ var m=staff[k];
+        return '<tr><td>'+esc(m.name)+'</td><td>'+m.sec+'</td><td class="mono">'+Math.max(1,Object.keys(m.days).length)+'</td></tr>'; }).join("")
+        : '<tr><td colspan="3">لا بيانات</td></tr>')+'</table></div></div>';
+    return h;
+  }
+  function adShipPage(){
+    var sh = curShip();
+    if(!sh){ adShip=""; return adShipsList(); }
+    var ds = datesOf(sh.ms.concat(sh.rs));
+    if(shDate!=="all" && ds.indexOf(shDate)<0) shDate="all";
+    var details = adShipTab==="wh" || adShipTab==="dock";
+    var ents = adShipTab==="wh" ? sh.ms : sh.rs, opts = staffOpts(ents);
+    if(adShipStaff!=="all" && !opts.some(function(o){ return o.key===adShipStaff; })) adShipStaff="all";
+    var h = '<button class="backbtn" data-back="1">‹ كل البواخر</button>'+
+      '<div class="shiphead"><div><div class="sn">'+esc(sh.name)+'</div><div class="sc">'+esc(sh.company||"—")+'</div></div></div>'+
+      adHelm(sh, shDate)+
+      '<div class="filters">'+dateSelect(ds, shDate, 'data-shdate="1"')+(details ? staffSelect(opts, adShipStaff, 'data-shstaff="1"', false) : '')+'</div>'+
+      '<div class="viewbar">'+
+        [["wh","تفاصيل المستودع"],["dock","تفاصيل الرصيف"],["rep","التقرير الشامل"]].map(function(t){
+          return '<button data-st="'+t[0]+'"'+(adShipTab===t[0]?' class="on"':'')+'>'+t[1]+'</button>'; }).join("")+'</div>';
+    if(adShipTab==="wh") h += adDetail("ms", sh.ms, shDate, adShipStaff);
+    else if(adShipTab==="dock") h += adDetail("rs", sh.rs, shDate, adShipStaff);
+    else h += adShipReport(sh, shDate);
+    return h;
+  }
+
+  function renderAdmin(){
+    if(!adData.ms || !adData.rs) return;
+    $("adSide").querySelectorAll("[data-sec]").forEach(function(b){ b.classList.toggle("on", b.dataset.sec===adSec); });
+    var ships = adSec==="ships";
+    $("adDate").style.display = ships ? "none" : "";
+    $("adStaff").style.display = ships ? "none" : "";
+    if(!ships){
+      var ents = adSec==="dock" ? entriesOf("rs") : adSec==="wh" ? entriesOf("ms") : entriesOf("ms").concat(entriesOf("rs"));
+      var ds = datesOf(ents);
+      if(adDate!=="all" && ds.indexOf(adDate)<0) adDate = "all";
+      $("adDate").innerHTML = '<option value="all">كل التواريخ</option>'+ds.map(function(d){ return '<option value="'+d+'">'+dmy(d)+'</option>'; }).join("");
+      $("adDate").value = adDate;
+      var opts = staffOpts(ents);
+      if(adStaff!=="all" && !opts.some(function(o){ return o.key===adStaff; })) adStaff="all";
+      $("adStaff").innerHTML = '<option value="all">كل الموظفين</option>'+opts.map(function(o){
+        return '<option value="'+esc(o.key)+'">'+esc(o.name)+(adSec==="staff" ? ' — '+(o.u==="rs"?"الرصيف":"المستودع") : '')+'</option>'; }).join("");
+      $("adStaff").value = adStaff;
+    }
+    $("adBody").innerHTML = adSec==="dock" ? adDetail("rs", entriesOf("rs"), adDate, adStaff)
+                         : adSec==="wh"   ? adDetail("ms", entriesOf("ms"), adDate, adStaff)
+                         : adSec==="staff"? adStaffPage()
+                         : (adShip ? adShipPage() : adShipsList());
+  }
+
+  /* ----- التنقل ----- */
+  function sideOpen(on){ $("adSide").classList.toggle("open", on); $("adOv").classList.toggle("on", on); }
+  $("adMenuBtn").addEventListener("click", function(){ sideOpen(!$("adSide").classList.contains("open")); });
+  $("adOv").addEventListener("click", function(){ sideOpen(false); });
+  $("adSide").querySelectorAll("[data-sec]").forEach(function(b){
+    b.addEventListener("click", function(){ adSec=b.dataset.sec; adShip=""; adStaff="all"; sideOpen(false); renderAdmin(); });
+  });
+  $("adDate").addEventListener("change", function(){ adDate = $("adDate").value || "all"; renderAdmin(); });
+  $("adStaff").addEventListener("change", function(){ adStaff = $("adStaff").value || "all"; renderAdmin(); });
+  $("adRefresh").addEventListener("click", function(){ loadAdmin().then(function(){ toast("تم تحديث البيانات."); }); });
+
+  function objOf(u,sa){ var st=adData[u]; return sa==="c" ? st : st.archive[+sa]; }
+  /* تعديل بيانات الباخرة / تغيير تاريخ التقرير */
+  $("adBody").addEventListener("change", function(e){
+    var t=e.target; if(!t.dataset) return;
+    if(t.dataset.shdate){ shDate = t.value || "all"; renderAdmin(); return; }
+    if(t.dataset.shstaff){ adShipStaff = t.value || "all"; renderAdmin(); return; }
+    if(!t.dataset.sk) return;
+    var u=t.dataset.su, k=t.dataset.sk, v=t.value.trim(), o=objOf(u,t.dataset.sa); if(!o) return;
+    if(k==="shipWeight") v = toLatin(v).replace(/,/g,"");
+    var oldKey = shipKey(o.ship);
+    o[k]=v; adSave(u); toast("تم حفظ التعديل.");
+    if(k==="ship" && adShip && oldKey===adShip) adShip = shipKey(v) || "__none";
+    renderAdmin();
+  });
+
+  /* تعديل / حذف سجل */
+  var edCtx = null;
+  function findRec(u,sa,sid,no){
+    var o=objOf(u,sa); if(!o) return null;
+    var sh=o.sheets.find(function(x){ return String(x.id)===String(sid); });
+    var r = sh && sh.records.find(function(x){ return x.no===no; });
+    return r ? { st:adData[u], obj:o, sh:sh, r:r } : null;
+  }
+  $("adBody").addEventListener("click", function(e){
+    var hh = e.target.closest ? e.target.closest("[data-hi]") : null;
+    if(hh){ if(!helmSuppress) helmSelect(+hh.dataset.hi); return; }
+    var b = e.target.closest ? e.target.closest("button") : null;
+    if(!b) return;
+    var d=b.dataset;
+    if(d.staffrow){ adStaff=d.staffrow; renderAdmin(); return; }
+    if(d.ship){ adShip=d.ship; adShipTab="wh"; shDate="all"; adShipStaff="all"; helmSel=0; helmRot=0; renderAdmin(); return; }
+    if(d.back){ adShip=""; renderAdmin(); return; }
+    if(d.st){ adShipTab=d.st; adShipStaff="all"; renderAdmin(); return; }
+    if(d.aedit){
+      var f=findRec(d.u, d.sa, d.sid, +d.no); if(!f) return;
+      edCtx = { u:d.u, f:f };
+      var r=f.r;
+      $("ed_plate").value=r.plate||""; $("ed_cargo").value=r.cargo||""; $("ed_driver").value=r.driver||"";
+      $("ed_arrive").value=r.arrive||""; $("ed_weight").value=(r.weight==null?"":r.weight);
+      $("ed_date").value=recDate(r,f.obj);
+      $("ed_wrap_w").style.display = edCtx.u==="rs" ? "none" : "";
+      $("ed_types").innerHTML = f.st.cargos.map(function(c){ return '<option value="'+esc(c)+'">'; }).join("");
+      $("edModal").classList.add("on");
+    } else if(d.adel){
+      var g=findRec(d.u, d.sa, d.sid, +d.no); if(!g) return;
+      var uu=d.u;
+      ask("حذف السجل","هل تريد حذف الشاحنة "+g.r.plate+" ("+(g.r.cargo||"")+") نهائياً؟", function(){
+        var i=g.sh.records.indexOf(g.r);
+        if(i>-1){ g.sh.records.splice(i,1); adSave(uu); renderAdmin(); toast("تم حذف السجل."); }
+      });
+    }
+  });
+  ["ed_plate","ed_weight"].forEach(function(id){
+    $(id).addEventListener("input", function(){ var v=toLatin($(id).value); if(v!==$(id).value) $(id).value=v; });
+  });
+  $("edNo").addEventListener("click", function(){ $("edModal").classList.remove("on"); edCtx=null; });
+  $("edYes").addEventListener("click", function(){
+    if(!edCtx) return;
+    var u=edCtx.u, dock=u==="rs", r=edCtx.f.r;
+    var plate=$("ed_plate").value.trim(), cargo=$("ed_cargo").value.trim(), driver=$("ed_driver").value.trim();
+    var w=$("ed_weight").value.replace(/,/g,"").trim();
+    if(plate.length<2){ toast("أدخل رقم السيارة."); return; }
+    if(cargo.length<2){ toast("أدخل نوع الشحنة."); return; }
+    if(!dock){
+      if(driver.length<3){ toast("أدخل اسم السائق."); return; }
+      if(w===""||isNaN(+w)||+w<=0){ toast("أدخل وزناً صحيحاً."); return; }
+    }
+    r.plate=plate; r.cargo=cargo; r.driver=driver; r.arrive=$("ed_arrive").value;
+    r.weight = dock ? 0 : Number(w);
+    r.date = $("ed_date").value || r.date || edCtx.f.obj.date || todayISO();
+    var st=edCtx.f.st; if(st.cargos.indexOf(cargo)<0) st.cargos.unshift(cargo);
+    adSave(u); $("edModal").classList.remove("on"); edCtx=null;
+    renderAdmin(); toast("تم حفظ التعديل.");
+  });
+
+  /* ---- الإقلاع ---- */
+  (function init(){
+    $("i_date").value = todayISO();
+    $("i_arrive").value = nowHM();
+    $("i_start").value = nowHM();
+  })();
+})();
+</script>
+</body>
+</html>
